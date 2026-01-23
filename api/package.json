@@ -1,0 +1,10 @@
+{
+  "name": "assistant-hub-api",
+  "version": "1.0.0",
+  "description": "Assistant Hub API Serverless Functions",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@supabase/supabase-js": "^2.91.0",
+    "uuid": "^13.0.0"
+  }
+}

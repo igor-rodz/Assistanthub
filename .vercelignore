@@ -1,0 +1,10 @@
+backend/
+node_modules/
+.git/
+.env
+.env.local
+*.log
+*.md
+!README.md
+test_*.js
+debug_*.js
