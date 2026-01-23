@@ -5,12 +5,13 @@
   "scripts": {
     "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
     "start:backend": "cd backend && npm start",
-    "start:frontend": "cd frontend && npm start",
-    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
-    "postinstall": "cd api && npm install && cd ../frontend && npm install"
+    "start:frontend": "cd frontend && npm start"
   },
   "dependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "@google/generative-ai": "^0.24.1",
+    "@supabase/supabase-js": "^2.91.0",
+    "uuid": "^11.0.5"
   },
   "engines": {
     "node": ">=18.0.0"
