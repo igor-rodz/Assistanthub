@@ -4,14 +4,14 @@ import { supabase } from './supabaseClient';
 // In production (Vercel), API is on same origin, so use relative path
 // In development, use localhost backend
 const isProduction = process.env.NODE_ENV === 'production';
-const BACKEND_URL = isProduction 
+const BACKEND_URL = isProduction
     ? '' // Same origin in production
     : (process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000');
 
 // Create axios instance
 const api = axios.create({
     baseURL: `${BACKEND_URL}/api`,
-    timeout: 60000, // 60s timeout for AI operations
+    timeout: 300000, // 5 min timeout for AI operations
     headers: {
         'Content-Type': 'application/json',
     },
