@@ -15,12 +15,55 @@ module.exports = {
         }
 
         try {
-            const user = await requireAuth(request);
-            const body = await getRequestBody(request);
+            console.log('[Analyze Error] Request method:', request.method);
+            console.log('[Analyze Error] Request URL:', request.url);
+            
+            // Validate request method
+            if (request.method !== 'POST') {
+                return new Response(JSON.stringify({ detail: "Method not allowed" }), {
+                    status: 405,
+                    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+                });
+            }
+
+            // Get body first
+            let body;
+            try {
+                body = await getRequestBody(request);
+                console.log('[Analyze Error] Body recebido:', JSON.stringify(body).substring(0, 200));
+            } catch (bodyErr) {
+                console.error('[Analyze Error] Erro ao parsear body:', bodyErr);
+                return new Response(JSON.stringify({ detail: "Invalid request body" }), {
+                    status: 400,
+                    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+                });
+            }
+
             const { error_log, tags = [] } = body;
 
-        console.log('[Analyze Error] Iniciando análise para usuário:', user.id);
-        console.log('[Analyze Error] Log recebido:', error_log?.substring(0, 100) + '...');
+            if (!error_log) {
+                return new Response(JSON.stringify({ detail: "error_log is required" }), {
+                    status: 400,
+                    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+                });
+            }
+
+            // Auth
+            let user;
+            try {
+                user = await requireAuth(request);
+                console.log('[Analyze Error] Usuário autenticado:', user.id);
+            } catch (authErr) {
+                console.error('[Analyze Error] Erro de autenticação:', authErr);
+                const status = authErr.status || 401;
+                return new Response(JSON.stringify({ detail: authErr.message || "Authentication failed" }), {
+                    status: status,
+                    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+                });
+            }
+
+            console.log('[Analyze Error] Iniciando análise para usuário:', user.id);
+            console.log('[Analyze Error] Log recebido:', error_log?.substring(0, 100) + '...');
 
             const { hasCredits } = await checkSufficientCredits(user.id, 0.5);
             if (!hasCredits) {
@@ -46,11 +89,25 @@ Responda APENAS JSON:
     `;
 
             console.log('[Analyze Error] Chamando Gemini API...');
-            const model = getGeminiModel();
-            const result = await model.generateContent(aiPrompt);
-            const response = await result.response;
-            let text = response.text();
-            console.log('[Analyze Error] Resposta recebida (primeiros 200 chars):', text.substring(0, 200));
+            let model;
+            try {
+                model = getGeminiModel();
+                console.log('[Analyze Error] Modelo Gemini obtido com sucesso');
+            } catch (modelErr) {
+                console.error('[Analyze Error] Erro ao obter modelo Gemini:', modelErr);
+                throw new Error('Erro ao inicializar modelo Gemini: ' + modelErr.message);
+            }
+
+            let result, response, text;
+            try {
+                result = await model.generateContent(aiPrompt);
+                response = await result.response;
+                text = response.text();
+                console.log('[Analyze Error] Resposta recebida (primeiros 200 chars):', text.substring(0, 200));
+            } catch (geminiErr) {
+                console.error('[Analyze Error] Erro ao chamar Gemini:', geminiErr);
+                throw new Error('Erro ao gerar conteúdo com Gemini: ' + geminiErr.message);
+            }
 
             // Clean up response text
             text = text.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -116,10 +173,29 @@ Responda APENAS JSON:
 
         } catch (err) {
             console.error("[Analyze Error] Erro completo:", err);
+            console.error("[Analyze Error] Stack:", err.stack);
+            console.error("[Analyze Error] Tipo do erro:", typeof err);
+            console.error("[Analyze Error] Erro stringificado:", JSON.stringify(err, Object.getOwnPropertyNames(err)));
+            
             const status = err.status || 500;
-            const message = err.message || "Erro desconhecido";
+            let message = "Erro desconhecido";
+            
+            if (err.message) {
+                message = err.message;
+            } else if (typeof err === 'string') {
+                message = err;
+            } else if (err.toString) {
+                message = err.toString();
+            }
+
+            // Don't expose internal errors in production
+            const errorDetail = process.env.NODE_ENV === 'production' 
+                ? "Erro interno do servidor. Verifique os logs."
+                : `Erro ao analisar erro: ${message}`;
+
             return new Response(JSON.stringify({ 
-                detail: "Erro ao analisar erro: " + message
+                detail: errorDetail,
+                error: process.env.NODE_ENV !== 'production' ? message : undefined
             }), {
                 status: status,
                 headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }

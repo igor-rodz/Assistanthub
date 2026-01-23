@@ -12,11 +12,23 @@ function getSupabase() {
         const supabaseUrl = process.env.SUPABASE_URL?.trim() || '';
         const supabaseKey = process.env.SUPABASE_KEY?.trim() || '';
         
+        console.log('[getSupabase] SUPABASE_URL presente:', !!supabaseUrl);
+        console.log('[getSupabase] SUPABASE_KEY presente:', !!supabaseKey);
+        
         if (!supabaseUrl || !supabaseKey) {
-            throw new Error('Missing SUPABASE_URL or SUPABASE_KEY environment variables');
+            const missing = [];
+            if (!supabaseUrl) missing.push('SUPABASE_URL');
+            if (!supabaseKey) missing.push('SUPABASE_KEY');
+            throw new Error(`Missing environment variables: ${missing.join(', ')}`);
         }
         
-        supabaseClient = createClient(supabaseUrl, supabaseKey);
+        try {
+            supabaseClient = createClient(supabaseUrl, supabaseKey);
+            console.log('[getSupabase] Cliente Supabase criado com sucesso');
+        } catch (err) {
+            console.error('[getSupabase] Erro ao criar cliente:', err);
+            throw new Error('Erro ao criar cliente Supabase: ' + err.message);
+        }
     }
     return supabaseClient;
 }
@@ -25,12 +37,20 @@ function getGeminiModel() {
     if (!geminiModel) {
         const geminiApiKey = process.env.GEMINI_API_KEY?.trim() || '';
         
+        console.log('[getGeminiModel] GEMINI_API_KEY presente:', !!geminiApiKey);
+        
         if (!geminiApiKey) {
             throw new Error('Missing GEMINI_API_KEY environment variable');
         }
         
-        const genAI = new GoogleGenerativeAI(geminiApiKey);
-        geminiModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        try {
+            const genAI = new GoogleGenerativeAI(geminiApiKey);
+            geminiModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+            console.log('[getGeminiModel] Modelo Gemini criado com sucesso');
+        } catch (err) {
+            console.error('[getGeminiModel] Erro ao criar modelo:', err);
+            throw new Error('Erro ao criar modelo Gemini: ' + err.message);
+        }
     }
     return geminiModel;
 }
