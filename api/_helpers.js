@@ -1,61 +1,41 @@
 // Shared helpers for Vercel serverless functions
-const { createClient } = require('@supabase/supabase-js');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-const { v4: uuidv4 } = require('uuid');
+import { createClient } from '@supabase/supabase-js';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { v4 as uuidv4 } from 'uuid';
 
 // Initialize clients (singleton pattern)
 let supabaseClient = null;
 let geminiModel = null;
 
-function getSupabase() {
+export function getSupabase() {
     if (!supabaseClient) {
         const supabaseUrl = process.env.SUPABASE_URL?.trim() || '';
         const supabaseKey = process.env.SUPABASE_KEY?.trim() || '';
-        
-        console.log('[getSupabase] SUPABASE_URL presente:', !!supabaseUrl);
-        console.log('[getSupabase] SUPABASE_KEY presente:', !!supabaseKey);
-        
+
         if (!supabaseUrl || !supabaseKey) {
-            const missing = [];
-            if (!supabaseUrl) missing.push('SUPABASE_URL');
-            if (!supabaseKey) missing.push('SUPABASE_KEY');
-            throw new Error(`Missing environment variables: ${missing.join(', ')}`);
+            throw new Error('Missing SUPABASE_URL or SUPABASE_KEY environment variables');
         }
-        
-        try {
-            supabaseClient = createClient(supabaseUrl, supabaseKey);
-            console.log('[getSupabase] Cliente Supabase criado com sucesso');
-        } catch (err) {
-            console.error('[getSupabase] Erro ao criar cliente:', err);
-            throw new Error('Erro ao criar cliente Supabase: ' + err.message);
-        }
+
+        supabaseClient = createClient(supabaseUrl, supabaseKey);
     }
     return supabaseClient;
 }
 
-function getGeminiModel() {
+export function getGeminiModel() {
     if (!geminiModel) {
         const geminiApiKey = process.env.GEMINI_API_KEY?.trim() || '';
-        
-        console.log('[getGeminiModel] GEMINI_API_KEY presente:', !!geminiApiKey);
-        
+
         if (!geminiApiKey) {
             throw new Error('Missing GEMINI_API_KEY environment variable');
         }
-        
-        try {
-            const genAI = new GoogleGenerativeAI(geminiApiKey);
-            geminiModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-            console.log('[getGeminiModel] Modelo Gemini criado com sucesso');
-        } catch (err) {
-            console.error('[getGeminiModel] Erro ao criar modelo:', err);
-            throw new Error('Erro ao criar modelo Gemini: ' + err.message);
-        }
+
+        const genAI = new GoogleGenerativeAI(geminiApiKey);
+        geminiModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     }
     return geminiModel;
 }
 
-async function requireAuth(request) {
+export async function requireAuth(request) {
     const authHeader = request.headers.get('authorization');
     if (!authHeader) {
         throw { status: 401, message: "Authorization token required" };
@@ -72,7 +52,7 @@ async function requireAuth(request) {
     return user;
 }
 
-async function getRequestBody(request) {
+export async function getRequestBody(request) {
     try {
         return await request.json();
     } catch (e) {
@@ -80,24 +60,24 @@ async function getRequestBody(request) {
     }
 }
 
-async function checkSufficientCredits(userId, amount) {
+export async function checkSufficientCredits(userId, amount) {
     return { hasCredits: true, balance: 9999.0 };
 }
 
-async function deductCredits(userId, amount, tool, summary, tokensIn, tokensOut) {
+export async function deductCredits(userId, amount, tool, summary, tokensIn, tokensOut) {
     try {
         const supabase = getSupabase();
-        
+
         const { data: creditData, error: creditError } = await supabase
             .from('user_credits')
             .select('credit_balance')
             .eq('user_id', userId)
             .single();
-        
+
         if (creditError && creditError.code !== 'PGRST116') {
             console.warn('[deductCredits] Erro ao buscar créditos:', creditError.message);
         }
-        
+
         const currentBalance = creditData ? creditData.credit_balance : 9999.0;
 
         if (currentBalance < amount) {
@@ -116,7 +96,7 @@ async function deductCredits(userId, amount, tool, summary, tokensIn, tokensOut)
             total_tokens: tokensIn + tokensOut,
             created_at: new Date().toISOString()
         });
-        
+
         if (logError) {
             console.warn('[deductCredits] Erro ao logar uso (continuando):', logError.message);
         }
@@ -125,7 +105,7 @@ async function deductCredits(userId, amount, tool, summary, tokensIn, tokensOut)
             .from('user_credits')
             .update({ credit_balance: newBalance })
             .eq('user_id', userId);
-        
+
         if (updateError) {
             console.warn('[deductCredits] Erro ao atualizar créditos (continuando):', updateError.message);
         }
@@ -137,7 +117,7 @@ async function deductCredits(userId, amount, tool, summary, tokensIn, tokensOut)
     }
 }
 
-function corsHeaders() {
+export function corsHeaders() {
     return {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
@@ -145,13 +125,4 @@ function corsHeaders() {
     };
 }
 
-module.exports = {
-    getSupabase,
-    getGeminiModel,
-    requireAuth,
-    checkSufficientCredits,
-    deductCredits,
-    corsHeaders,
-    uuidv4,
-    getRequestBody
-};
+export { uuidv4 };
