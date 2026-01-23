@@ -26,9 +26,21 @@ const genAI = new GoogleGenerativeAI(geminiApiKey);
 const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
 // -- Middleware --
-// CORS: Allow specific origins (or all in dev)
+// CORS: Allow specific origins from .env
+const corsOrigins = process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',').map(o => o.trim()) : [];
+
 app.use(cors({
-    origin: true,
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+
+        if (corsOrigins.includes(origin) || corsOrigins.includes('*')) {
+            callback(null, true);
+        } else {
+            console.warn(`CORS blocked origin: ${origin}`);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true
 }));
 
@@ -78,11 +90,11 @@ async function deductCredits(userId, amount, tool, summary, tokensIn, tokensOut)
             .select('credit_balance')
             .eq('user_id', userId)
             .single();
-        
+
         if (creditError && creditError.code !== 'PGRST116') { // PGRST116 = no rows returned
             console.warn('[deductCredits] Erro ao buscar créditos:', creditError.message);
         }
-        
+
         const currentBalance = creditData ? creditData.credit_balance : 9999.0; // Default high balance if no record
 
         if (currentBalance < amount) {
@@ -102,7 +114,7 @@ async function deductCredits(userId, amount, tool, summary, tokensIn, tokensOut)
             total_tokens: tokensIn + tokensOut,
             created_at: new Date().toISOString()
         });
-        
+
         if (logError) {
             console.warn('[deductCredits] Erro ao logar uso (continuando):', logError.message);
         }
@@ -112,7 +124,7 @@ async function deductCredits(userId, amount, tool, summary, tokensIn, tokensOut)
             .from('user_credits')
             .update({ credit_balance: newBalance })
             .eq('user_id', userId);
-        
+
         if (updateError) {
             console.warn('[deductCredits] Erro ao atualizar créditos (continuando):', updateError.message);
         }
@@ -296,7 +308,7 @@ Responda APENAS JSON:
         } catch (e) {
             console.log('[Analyze Error] Erro no parse inicial, tentando extrair JSON...');
             console.log('[Analyze Error] Texto completo:', text);
-            
+
             // Try to extract JSON from text
             const match = text.match(/\{[\s\S]*\}/);
             if (match) {
@@ -351,7 +363,7 @@ Responda APENAS JSON:
     } catch (err) {
         console.error("[Analyze Error] Erro completo:", err);
         console.error("[Analyze Error] Stack:", err.stack);
-        res.status(500).json({ 
+        res.status(500).json({
             detail: "Erro ao analisar erro: " + err.message,
             error: process.env.NODE_ENV === 'development' ? err.stack : undefined
         });
