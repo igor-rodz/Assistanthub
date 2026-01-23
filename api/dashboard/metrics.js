@@ -1,32 +1,45 @@
 const { getSupabase, requireAuth, corsHeaders, uuidv4 } = require('../_helpers');
 
-module.exports = async (req, res) => {
-    // Handle CORS
-    if (req.method === 'OPTIONS') {
-        return res.status(200).json({});
-    }
-
-    try {
-        const user = await requireAuth(req);
-        const supabase = getSupabase();
-
-        const [corrections, designs] = await Promise.all([
-            supabase.from('credit_usage_logs').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('tool_used', 'oneshot_fixes'),
-            supabase.from('credit_usage_logs').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('tool_used', 'design_job')
-        ]);
-
-        return res.json({
-            id: uuidv4(),
-            corrections: corrections.count || 0,
-            designs: designs.count || 0,
-            saved: 0,
-            updated_at: new Date()
-        });
-    } catch (err) {
-        if (err.status) {
-            return res.status(err.status).json({ detail: err.message });
+module.exports = {
+    async fetch(request) {
+        // Handle CORS preflight
+        if (request.method === 'OPTIONS') {
+            return new Response(null, {
+                status: 200,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+                    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+                }
+            });
         }
-        console.error(err);
-        return res.status(500).json({ detail: "Error fetching metrics" });
+
+        try {
+            const user = await requireAuth(request);
+            const supabase = getSupabase();
+
+            const [corrections, designs] = await Promise.all([
+                supabase.from('credit_usage_logs').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('tool_used', 'oneshot_fixes'),
+                supabase.from('credit_usage_logs').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('tool_used', 'design_job')
+            ]);
+
+            return new Response(JSON.stringify({
+                id: uuidv4(),
+                corrections: corrections.count || 0,
+                designs: designs.count || 0,
+                saved: 0,
+                updated_at: new Date()
+            }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+            });
+        } catch (err) {
+            const status = err.status || 500;
+            const message = err.message || "Error fetching metrics";
+            return new Response(JSON.stringify({ detail: message }), {
+                status: status,
+                headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+            });
+        }
     }
 };

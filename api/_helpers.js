@@ -35,8 +35,8 @@ function getGeminiModel() {
     return geminiModel;
 }
 
-async function requireAuth(req) {
-    const authHeader = req.headers.authorization;
+async function requireAuth(request) {
+    const authHeader = request.headers.get('authorization');
     if (!authHeader) {
         throw { status: 401, message: "Authorization token required" };
     }
@@ -50,6 +50,14 @@ async function requireAuth(req) {
     }
 
     return user;
+}
+
+async function getRequestBody(request) {
+    try {
+        return await request.json();
+    } catch (e) {
+        return {};
+    }
 }
 
 async function checkSufficientCredits(userId, amount) {
@@ -124,5 +132,6 @@ module.exports = {
     checkSufficientCredits,
     deductCredits,
     corsHeaders,
-    uuidv4
+    uuidv4,
+    getRequestBody
 };
