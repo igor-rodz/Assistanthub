@@ -1,127 +1,116 @@
-import { getGeminiModel, requireAuth, checkSufficientCredits, deductCredits, uuidv4, getRequestBody } from './_helpers.js';
+import {
+    getGeminiModel,
+    requireAuth,
+    checkSufficientCredits,
+    deductCredits,
+    uuidv4,
+    getRequestBody,
+    createResponse,
+    createErrorResponse,
+    corsHeaders
+} from './_helpers.js';
 
 export default async function handler(request) {
-    // Handle CORS preflight
+    // 1. Handle CORS Preflight
     if (request.method === 'OPTIONS') {
-        return new Response(null, {
-            status: 200,
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-            }
-        });
+        return new Response(null, { status: 200, headers: corsHeaders() });
     }
 
     try {
+        // 2. Auth & Input
         const user = await requireAuth(request);
         const body = await getRequestBody(request);
         const { error_log, tags = [] } = body;
 
-        console.log('[Analyze Error] Iniciando análise para usuário:', user.id);
-        console.log('[Analyze Error] Log recebido:', error_log?.substring(0, 100) + '...');
-
-        const { hasCredits } = await checkSufficientCredits(user.id, 0.5);
-        if (!hasCredits) {
-            return new Response(JSON.stringify({ detail: "Créditos insuficientes" }), {
-                status: 402,
-                headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-            });
+        if (!error_log) {
+            throw { status: 400, message: "Missing 'error_log' in request body" };
         }
 
-        const aiPrompt = `
-Você é o Lasy Fixer Pro. Analise:
-LOG: ${error_log}
-TAGS: ${tags.join(', ')}
-Responda APENAS JSON:
-{
-    "framework": "...",
-    "severity": "Alta/Média/Baixa",
-    "root_cause": "...",
-    "root_cause_description": "...",
-    "solution": "...",
-    "prompt": "..."
-}
-    `;
+        console.log(`[Analyze Error] Start for User: ${user.id}`);
 
-        console.log('[Analyze Error] Chamando Gemini API...');
+        // 3. Credit Check
+        const { hasCredits } = await checkSufficientCredits(user.id, 0.5);
+        if (!hasCredits) {
+            throw { status: 402, message: "Insufficient credits" };
+        }
+
+        // 4. AI Generation
+        const aiPrompt = `
+Você é o Lasy Fixer Pro. Analise ste erro de programação.
+LOG: ${error_log.substring(0, 5000)} 
+TAGS: ${tags.join(', ')}
+
+Responda APENAS um JSON válido (sem markdown code blocks) com este formato exato:
+{
+    "framework": "Nome do Framework/Lib",
+    "severity": "Alta" | "Média" | "Baixa",
+    "root_cause": "Explicação técnica curta da causa raiz",
+    "root_cause_description": "Explicação detalhada para o desenvolvedor",
+    "solution": "Passo a passo para corrigir",
+    "prompt": "Um comando ou dica rápida relacionada",
+    "corrected_code": "Snippet de código corrigido se aplicável (opcional)"
+}`;
+
         const model = await getGeminiModel();
+
+        // Timeout handling is implicit via Vercel, but good to wrap if we had custom helper
         const result = await model.generateContent(aiPrompt);
         const response = await result.response;
         let text = response.text();
-        console.log('[Analyze Error] Resposta recebida (primeiros 200 chars):', text.substring(0, 200));
 
-        // Clean up response text
+        // 5. Clean & Parse JSON
         text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+
+        // Enforce JSON start/end if Gemini chatters
+        const jsonStart = text.indexOf('{');
+        const jsonEnd = text.lastIndexOf('}');
+        if (jsonStart !== -1 && jsonEnd !== -1) {
+            text = text.substring(jsonStart, jsonEnd + 1);
+        }
 
         let analysis;
         try {
             analysis = JSON.parse(text);
-            console.log('[Analyze Error] JSON parseado com sucesso');
         } catch (e) {
-            console.log('[Analyze Error] Erro no parse inicial, tentando extrair JSON...');
-            console.log('[Analyze Error] Texto completo:', text);
-
-            const match = text.match(/\{[\s\S]*\}/);
-            if (match) {
-                try {
-                    analysis = JSON.parse(match[0]);
-                    console.log('[Analyze Error] JSON extraído e parseado com sucesso');
-                } catch (parseErr) {
-                    console.error('[Analyze Error] Erro ao parsear JSON extraído:', parseErr.message);
-                    throw new Error(`Erro ao parsear JSON: ${parseErr.message}. Resposta do Gemini: ${text.substring(0, 500)}`);
-                }
-            } else {
-                throw new Error(`Nenhum JSON encontrado na resposta do Gemini. Resposta: ${text.substring(0, 500)}`);
-            }
+            console.error("[Analyze Error] JSON Parse Failed:", text);
+            // Fallback object instead of crash
+            analysis = {
+                framework: "Desconhecido",
+                severity: "Média",
+                root_cause: "Erro ao processar resposta da IA",
+                root_cause_description: "A IA retornou um formato inválido. Tente novamente.",
+                solution: "Não foi possível gerar uma solução automática no momento.",
+                prompt: "Tente reenviar com mais contexto."
+            };
         }
 
-        // Validate required fields
-        if (!analysis.framework || !analysis.root_cause || !analysis.solution) {
-            console.warn('[Analyze Error] Campos faltando no JSON:', analysis);
-        }
-
-        // Calculate Token/Credits
-        const tokensIn = aiPrompt.split(/\s+/).length * 2;
-        const tokensOut = text.split(/\s+/).length * 2;
+        // 6. Deduct Credits & Log
+        const tokensIn = aiPrompt.length / 4; // Estimate
+        const tokensOut = text.length / 4;
         const creditCost = 1.0;
 
-        console.log('[Analyze Error] Deduzindo créditos...');
-        const { remaining } = await deductCredits(user.id, creditCost, 'oneshot_fixes', 'Error Analysis', tokensIn, tokensOut);
+        const { remaining } = await deductCredits(
+            user.id,
+            creditCost,
+            'oneshot_fixes',
+            `Analysis: ${analysis.framework}`,
+            Math.ceil(tokensIn),
+            Math.ceil(tokensOut)
+        );
 
+        // 7. Response
         const responseData = {
             id: await uuidv4(),
-            log_id: `#${new Date().toISOString().split('T')[0].replace(/-/g, '')}-${(await uuidv4()).substring(0, 4).toUpperCase()}`,
+            log_id: `#${Date.now().toString(36).toUpperCase()}`,
             timestamp: new Date().toLocaleString(),
-            framework: analysis.framework || "ND",
-            severity: analysis.severity || "Média",
-            tokens_input: tokensIn,
-            tokens_output: tokensOut,
-            tokens_total: tokensIn + tokensOut,
+            ...analysis,
             credits_used: creditCost,
-            credits_remaining: remaining,
-            processing_time: "1.0s",
-            root_cause: analysis.root_cause || "Não identificado",
-            root_cause_description: analysis.root_cause_description || analysis.root_cause || "Não identificado",
-            solution: analysis.solution || "Não disponível",
-            prompt: analysis.prompt || "Não disponível"
+            credits_remaining: remaining
         };
 
-        console.log('[Analyze Error] Análise concluída com sucesso');
-        return new Response(JSON.stringify(responseData), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-        });
+        return createResponse(responseData);
 
     } catch (err) {
-        console.error("[Analyze Error] Erro completo:", err);
-        const status = err.status || 500;
-        const message = err.message || "Erro desconhecido";
-        return new Response(JSON.stringify({
-            detail: "Erro ao analisar erro: " + message
-        }), {
-            status: status,
-            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-        });
+        return createErrorResponse(err);
     }
 }
