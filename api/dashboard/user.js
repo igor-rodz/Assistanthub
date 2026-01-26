@@ -15,7 +15,7 @@ export default async function handler(request) {
 
     try {
         const user = await requireAuth(request);
-        const supabase = getSupabase();
+        const supabase = await getSupabase();
 
         const { data, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
 

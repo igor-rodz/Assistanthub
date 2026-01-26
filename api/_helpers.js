@@ -1,14 +1,13 @@
 // Shared helpers for Vercel serverless functions
-import { createClient } from '@supabase/supabase-js';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { v4 as uuidv4 } from 'uuid';
+// Using lazy loading to reduce cold start time
 
 // Initialize clients (singleton pattern)
 let supabaseClient = null;
 let geminiModel = null;
 
-export function getSupabase() {
+export async function getSupabase() {
     if (!supabaseClient) {
+        const { createClient } = await import('@supabase/supabase-js');
         const supabaseUrl = process.env.SUPABASE_URL?.trim() || '';
         const supabaseKey = process.env.SUPABASE_KEY?.trim() || '';
 
@@ -21,8 +20,9 @@ export function getSupabase() {
     return supabaseClient;
 }
 
-export function getGeminiModel() {
+export async function getGeminiModel() {
     if (!geminiModel) {
+        const { GoogleGenerativeAI } = await import('@google/generative-ai');
         const geminiApiKey = process.env.GEMINI_API_KEY?.trim() || '';
 
         if (!geminiApiKey) {
@@ -30,7 +30,7 @@ export function getGeminiModel() {
         }
 
         const genAI = new GoogleGenerativeAI(geminiApiKey);
-        geminiModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        geminiModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
     }
     return geminiModel;
 }
@@ -42,7 +42,7 @@ export async function requireAuth(request) {
     }
 
     const token = authHeader.split(' ')[1];
-    const supabase = getSupabase();
+    const supabase = await getSupabase();
     const { data: { user }, error } = await supabase.auth.getUser(token);
 
     if (error || !user) {
@@ -66,7 +66,7 @@ export async function checkSufficientCredits(userId, amount) {
 
 export async function deductCredits(userId, amount, tool, summary, tokensIn, tokensOut) {
     try {
-        const supabase = getSupabase();
+        const supabase = await getSupabase();
 
         const { data: creditData, error: creditError } = await supabase
             .from('user_credits')
@@ -125,4 +125,7 @@ export function corsHeaders() {
     };
 }
 
-export { uuidv4 };
+export async function uuidv4() {
+    const { v4 } = await import('uuid');
+    return v4();
+}

@@ -15,7 +15,7 @@ export default async function handler(request) {
 
     try {
         const user = await requireAuth(request);
-        const supabase = getSupabase();
+        const supabase = await getSupabase();
 
         const [corrections, designs] = await Promise.all([
             supabase.from('credit_usage_logs').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('tool_used', 'oneshot_fixes'),
@@ -23,7 +23,7 @@ export default async function handler(request) {
         ]);
 
         return new Response(JSON.stringify({
-            id: uuidv4(),
+            id: await uuidv4(),
             corrections: corrections.count || 0,
             designs: designs.count || 0,
             saved: 0,

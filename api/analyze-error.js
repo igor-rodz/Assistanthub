@@ -45,7 +45,7 @@ Responda APENAS JSON:
     `;
 
         console.log('[Analyze Error] Chamando Gemini API...');
-        const model = getGeminiModel();
+        const model = await getGeminiModel();
         const result = await model.generateContent(aiPrompt);
         const response = await result.response;
         let text = response.text();
@@ -90,8 +90,8 @@ Responda APENAS JSON:
         const { remaining } = await deductCredits(user.id, creditCost, 'oneshot_fixes', 'Error Analysis', tokensIn, tokensOut);
 
         const responseData = {
-            id: uuidv4(),
-            log_id: `#${new Date().toISOString().split('T')[0].replace(/-/g, '')}-${uuidv4().substring(0, 4).toUpperCase()}`,
+            id: await uuidv4(),
+            log_id: `#${new Date().toISOString().split('T')[0].replace(/-/g, '')}-${(await uuidv4()).substring(0, 4).toUpperCase()}`,
             timestamp: new Date().toLocaleString(),
             framework: analysis.framework || "ND",
             severity: analysis.severity || "Média",

@@ -14,7 +14,7 @@ export default async function handler(request) {
     }
 
     try {
-        const supabase = getSupabase();
+        const supabase = await getSupabase();
         const { data } = await supabase.from('tools').select('*').order('id');
 
         return new Response(JSON.stringify(data || []), {

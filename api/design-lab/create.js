@@ -33,7 +33,7 @@ Regras: CSS moderno, tema escuro, responsivo.
 Responda JSON: { "html": "...", "css": "...", "component_count": 5 }
     `;
 
-        const model = getGeminiModel();
+        const model = await getGeminiModel();
         const result = await model.generateContent(aiPrompt);
         const response = await result.response;
         let text = response.text();
@@ -62,8 +62,8 @@ Responda JSON: { "html": "...", "css": "...", "component_count": 5 }
 
         const { remaining } = await deductCredits(user.id, creditCost, 'design_job', `Design: ${prompt.substring(0, 20)}`, tokensIn, tokensOut);
 
-        const supabase = getSupabase();
-        const jobId = uuidv4();
+        const supabase = await getSupabase();
+        const jobId = await uuidv4();
         const jobData = {
             job_id: jobId,
             user_id: user.id,
