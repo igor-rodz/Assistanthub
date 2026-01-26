@@ -21,10 +21,12 @@ Certifique-se de que seu código está no GitHub, GitLab ou Bitbucket.
 3. Importe seu repositório
 4. Configure o projeto:
    - **Framework Preset**: Other
-   - **Root Directory**: `frontend`
-   - **Build Command**: `npm run build`
-   - **Output Directory**: `build`
-   - **Install Command**: `npm install`
+   - **Root Directory**: `.` (raiz do projeto, não `frontend`)
+   - **Build Command**: (deixe vazio, será usado do `vercel.json`)
+   - **Output Directory**: (deixe vazio, será usado do `vercel.json`)
+   - **Install Command**: (deixe vazio, será usado do `vercel.json`)
+   
+   **IMPORTANTE**: O Root Directory deve ser a raiz do projeto (onde está o `vercel.json` e a pasta `api`), não a pasta `frontend`!
 
 ### 3. Configurar Variáveis de Ambiente
 
@@ -45,7 +47,7 @@ REACT_APP_BACKEND_URL=https://seu-projeto.vercel.app
 
 1. Clique em **Deploy**
 2. Aguarde o build completar
-3. Após o primeiro deploy, atualize a variável `REACT_APP_BACKEND_URL` com a URL real do projeto
+3. Verifique se o deploy foi bem-sucedido e teste as funcionalidades
 
 ### 5. Verificar Deploy
 

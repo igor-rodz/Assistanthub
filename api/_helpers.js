@@ -45,9 +45,24 @@ export async function generateWithRetry(model, prompt, retries = 3) {
         } catch (error) {
             const isLastAttempt = i === retries - 1;
             const status = error.response?.status || error.status || 500;
+            const errorMessage = error.message || error.toString() || '';
 
-            // Retry on 429 (Too Many Requests) or 503 (Service Unavailable)
-            if ((status === 429 || status === 503) && !isLastAttempt) {
+            // Check if it's a quota error
+            const isQuotaError = errorMessage.includes('quota') || 
+                                errorMessage.includes('Quota exceeded') ||
+                                errorMessage.includes('exceeded your current quota');
+
+            // If it's a quota error, don't retry - return a specific error
+            if (isQuotaError) {
+                throw { 
+                    status: 429, 
+                    message: 'Cota da API Gemini excedida. Verifique seu plano e faturamento no Google Cloud Console. Aguarde alguns minutos antes de tentar novamente.',
+                    isQuotaError: true
+                };
+            }
+
+            // Retry on 429 (Too Many Requests) or 503 (Service Unavailable) - but not quota errors
+            if ((status === 429 || status === 503) && !isLastAttempt && !isQuotaError) {
                 const delay = Math.pow(2, i) * 1000; // Exponential backoff: 1s, 2s, 4s
                 console.warn(`[Gemini Retry] Attempt ${i + 1} failed with ${status}. Retrying in ${delay}ms...`);
                 await new Promise(resolve => setTimeout(resolve, delay));
@@ -114,10 +129,15 @@ export function createResponse(data, status = 200) {
 export function createErrorResponse(error, defaultStatus = 500) {
     const status = error.status || defaultStatus;
     const message = error.message || "Internal Server Error";
+    const isQuotaError = error.isQuotaError || false;
 
     console.error(`[API Error ${status}]:`, message);
 
-    return new Response(JSON.stringify({ error: message }), {
+    return new Response(JSON.stringify({ 
+        error: message,
+        isQuotaError: isQuotaError,
+        status: status
+    }), {
         status,
         headers: { 'Content-Type': 'application/json', ...corsHeaders() }
     });

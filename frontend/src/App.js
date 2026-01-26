@@ -305,7 +305,12 @@ const DashboardPage = () => {
           setTools(toolsRes.data);
         }
       } catch (e) {
-        console.warn("Backend not available, using mock data:", e);
+        // Only show "backend not available" if it's a network error, not a 429/500/etc
+        if (!e.response && e.request) {
+          console.warn("Backend not available, using mock data:", e);
+        } else {
+          console.warn("Backend returned error, using mock data:", e.response?.status, e.response?.data);
+        }
       } finally {
         setLoading(false);
       }
@@ -410,12 +415,23 @@ const CorrecoesPage = () => {
       } else if (e.response) {
         console.error('[OneShotFix] Erro do servidor:', e.response.status, e.response.data);
         const serverMsg = e.response.data?.error || e.response.data?.detail || e.response.data?.message;
+        const isQuotaError = e.response.data?.isQuotaError;
 
-        if (e.response.status === 429 || e.response.status === 503) {
-          setError('O sistema está sobrecarregado (Muitas requisições). Tente novamente em alguns segundos.');
+        if (e.response.status === 429) {
+          if (isQuotaError) {
+            setError('⚠️ Cota da API Gemini excedida. Verifique seu plano no Google Cloud Console ou aguarde alguns minutos. O backend está funcionando, mas a API de IA atingiu o limite.');
+          } else {
+            setError('O sistema está sobrecarregado (Muitas requisições). Tente novamente em alguns segundos.');
+          }
+        } else if (e.response.status === 503) {
+          setError('Serviço temporariamente indisponível. Tente novamente em alguns segundos.');
         } else {
           setError(serverMsg || `Erro do servidor: ${e.response.status}`);
         }
+      } else if (e.request) {
+        // Request was made but no response received - backend might be down
+        console.error('[OneShotFix] Sem resposta do servidor:', e.message);
+        setError('❌ Backend não disponível. Verifique se o servidor está rodando e se as variáveis de ambiente estão configuradas corretamente.');
       } else {
         console.error('[OneShotFix] Erro desconhecido:', e.message);
         setError(`Erro de conexão: ${e.message}`);

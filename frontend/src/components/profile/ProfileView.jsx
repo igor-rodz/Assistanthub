@@ -3,9 +3,6 @@ import { Camera, Zap, Clock, Award, Save, Loader2, Check } from 'lucide-react';
 import api from '../../lib/api';
 import { supabase } from '../../lib/supabaseClient';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
-const API = `${BACKEND_URL}/api`;
-
 const ProfileView = ({ user }) => {
     const [formData, setFormData] = useState({
         name: '',

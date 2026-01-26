@@ -6,9 +6,6 @@ import { motion } from "framer-motion";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
-const API = `${BACKEND_URL}/api`;
-
 // Logo Component
 const Logo = () => {
     return (
@@ -60,13 +57,25 @@ const Layout = ({ children }) => {
         const fetchData = async () => {
             try {
                 const [userRes, creditsRes] = await Promise.all([
-                    api.post(`/dashboard/tool/${toolId}/open`),
-                    axios.get(`${API}/credits/balance`)
+                    api.get('/dashboard/user'),
+                    api.get('/dashboard/metrics').catch(() => null) // Credits might be in metrics
                 ]);
                 if (userRes.data) setUser(userRes.data);
-                if (creditsRes.data) setCredits(creditsRes.data);
+                // Credits are typically part of user data or metrics
+                if (creditsRes?.data) {
+                    setCredits({
+                        credit_balance: creditsRes.data.credits || 0,
+                        plan: creditsRes.data.plan || "starter",
+                        monthly_limit: creditsRes.data.monthly_limit || 300
+                    });
+                }
             } catch (e) {
-                console.warn("Backend not available, using mock data");
+                // Only log as "backend not available" if it's a network error
+                if (!e.response && e.request) {
+                    console.warn("Backend not available, using mock data");
+                } else {
+                    console.warn("Backend error, using mock data:", e.response?.status);
+                }
             }
         };
         fetchData();
