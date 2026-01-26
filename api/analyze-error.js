@@ -7,7 +7,8 @@ import {
     getRequestBody,
     createResponse,
     createErrorResponse,
-    corsHeaders
+    corsHeaders,
+    generateWithRetry
 } from './_helpers.js';
 
 export const config = { runtime: 'edge' };
@@ -48,7 +49,7 @@ Responda APENAS JSON válido (sem markdown):
 }`;
 
         const model = await getGeminiModel();
-        const result = await model.generateContent(prompt);
+        const result = await generateWithRetry(model, prompt);
         const response = await result.response;
         let text = response.text();
 

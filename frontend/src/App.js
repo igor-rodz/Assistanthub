@@ -409,10 +409,16 @@ const CorrecoesPage = () => {
         setError('A análise está demorando muito. Por favor, tente novamente com um log menor.');
       } else if (e.response) {
         console.error('[OneShotFix] Erro do servidor:', e.response.status, e.response.data);
-        setError(e.response?.data?.detail || `Erro do servidor: ${e.response.status}`);
-        setError('Não foi possível conectar ao servidor backend. Por favor, certifique-se de que rodou "npm start" na pasta raiz.');
+        const serverMsg = e.response.data?.error || e.response.data?.detail || e.response.data?.message;
+
+        if (e.response.status === 429 || e.response.status === 503) {
+          setError('O sistema está sobrecarregado (Muitas requisições). Tente novamente em alguns segundos.');
+        } else {
+          setError(serverMsg || `Erro do servidor: ${e.response.status}`);
+        }
+      } else {
         console.error('[OneShotFix] Erro desconhecido:', e.message);
-        setError(`Erro inesperado: ${e.message}`);
+        setError(`Erro de conexão: ${e.message}`);
       }
 
       setCurrentView('input');

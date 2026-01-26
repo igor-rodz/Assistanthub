@@ -38,6 +38,27 @@ export async function getGeminiModel() {
     return geminiModel;
 }
 
+export async function generateWithRetry(model, prompt, retries = 3) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            return await model.generateContent(prompt);
+        } catch (error) {
+            const isLastAttempt = i === retries - 1;
+            const status = error.response?.status || error.status || 500;
+
+            // Retry on 429 (Too Many Requests) or 503 (Service Unavailable)
+            if ((status === 429 || status === 503) && !isLastAttempt) {
+                const delay = Math.pow(2, i) * 1000; // Exponential backoff: 1s, 2s, 4s
+                console.warn(`[Gemini Retry] Attempt ${i + 1} failed with ${status}. Retrying in ${delay}ms...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                continue;
+            }
+
+            throw error;
+        }
+    }
+}
+
 // --- AUTH ---
 
 export async function requireAuth(request) {
