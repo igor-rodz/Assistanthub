@@ -2,7 +2,6 @@
   "type": "module",
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
-    "@supabase/supabase-js": "^2.91.0",
-    "uuid": "^11.0.5"
+    "@supabase/supabase-js": "^2.91.0"
   }
 }

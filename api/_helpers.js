@@ -74,8 +74,15 @@ export async function getGeminiModel() {
 }
 
 export async function uuidv4() {
-    const { v4 } = await import('uuid');
-    return v4();
+    // Use Node.js native crypto for better performance and zero-dependency
+    if (globalThis.crypto && globalThis.crypto.randomUUID) {
+        return globalThis.crypto.randomUUID();
+    }
+    // Fallback for older envs (unlikely in Vercel)
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
 }
 
 // --- SECURITY & AUTH ---
