@@ -1,16 +1,8 @@
-import { getSupabase, requireAuth } from '../_helpers.js';
+import { getSupabase, requireAuth, createResponse, createErrorResponse, corsHeaders } from '../_helpers.js';
 
 export default async function handler(request) {
-    // Handle CORS preflight
     if (request.method === 'OPTIONS') {
-        return new Response(null, {
-            status: 200,
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-            }
-        });
+        return new Response(null, { status: 200, headers: corsHeaders() });
     }
 
     try {
@@ -20,22 +12,12 @@ export default async function handler(request) {
         const { data, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
 
         if (error) {
-            return new Response(JSON.stringify({ detail: "User not found" }), {
-                status: 404,
-                headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-            });
+            throw { status: 404, message: "User not found" };
         }
 
-        return new Response(JSON.stringify(data), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-        });
+        return createResponse(data);
+
     } catch (err) {
-        const status = err.status || 500;
-        const message = err.message || "Error fetching user";
-        return new Response(JSON.stringify({ detail: message }), {
-            status: status,
-            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-        });
+        return createErrorResponse(err);
     }
 }
