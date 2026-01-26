@@ -9,14 +9,14 @@ const DesignLabGenerating = ({ messages = [], onCancel }) => {
         <div className="flex flex-col items-center justify-center h-full gap-8 relative">
             {/* Background effect */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[100px] animate-pulse" />
+                <div className="w-[500px] h-[500px] bg-teal-600/10 rounded-full blur-[100px] animate-pulse" />
             </div>
 
             {/* Spinner */}
             <div className="relative">
-                <div className="w-24 h-24 rounded-full border-4 border-purple-500/20 border-t-purple-500 animate-spin" />
+                <div className="w-24 h-24 rounded-full border-4 border-teal-500/20 border-t-teal-500 animate-spin" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                    <Loader2 className="w-8 h-8 text-purple-400 animate-spin" style={{ animationDirection: 'reverse' }} />
+                    <Loader2 className="w-8 h-8 text-teal-400 animate-spin" style={{ animationDirection: 'reverse' }} />
                 </div>
             </div>
 
@@ -34,7 +34,7 @@ const DesignLabGenerating = ({ messages = [], onCancel }) => {
                         className="flex items-center gap-2 text-white/70 animate-in fade-in slide-in-from-bottom-2 duration-500"
                         style={{ animationDelay: `${index * 100}ms` }}
                     >
-                        <div className={`w-2 h-2 rounded-full ${index === messages.length - 1 ? 'bg-purple-400 animate-pulse' : 'bg-green-400'}`} />
+                        <div className={`w-2 h-2 rounded-full ${index === messages.length - 1 ? 'bg-teal-400 animate-pulse' : 'bg-emerald-400'}`} />
                         <span className={index === messages.length - 1 ? 'text-white' : 'text-white/50'}>
                             {msg}
                         </span>

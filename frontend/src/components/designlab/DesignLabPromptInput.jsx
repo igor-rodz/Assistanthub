@@ -96,7 +96,7 @@ const DesignLabPromptInput = ({ onSubmit, initialPrompt = '' }) => {
                             <select
                                 value={fidelity}
                                 onChange={(e) => setFidelity(e.target.value)}
-                                className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white/70 focus:outline-none focus:border-purple-500"
+                                className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white/70 focus:outline-none focus:border-teal-500"
                             >
                                 <option value="wireframe">Wireframe</option>
                                 <option value="medium">Médio</option>
@@ -110,7 +110,7 @@ const DesignLabPromptInput = ({ onSubmit, initialPrompt = '' }) => {
                             className={cn(
                                 "flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all",
                                 prompt.trim()
-                                    ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:opacity-90 shadow-lg shadow-purple-500/25"
+                                    ? "bg-gradient-to-r from-teal-500 to-cyan-500 text-white hover:from-teal-400 hover:to-cyan-400 shadow-lg shadow-teal-500/25"
                                     : "bg-white/10 text-white/30 cursor-not-allowed"
                             )}
                         >
@@ -135,7 +135,7 @@ const DesignLabPromptInput = ({ onSubmit, initialPrompt = '' }) => {
                             className={cn(
                                 "flex items-center gap-2 px-4 py-2 rounded-full border transition-all",
                                 designType === action.type
-                                    ? "border-purple-500 bg-purple-500/20 text-purple-300"
+                                    ? "border-teal-500 bg-teal-500/20 text-teal-300"
                                     : "border-white/20 bg-black/30 text-white/60 hover:text-white hover:bg-white/5"
                             )}
                         >

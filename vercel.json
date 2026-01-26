@@ -12,9 +12,7 @@
     }
   ],
   "functions": {
-    "api/**/*.js": {
-      "maxDuration": 60,
-      "runtime": "edge"
-    }
+    "maxDuration": 60
   }
+}
 }

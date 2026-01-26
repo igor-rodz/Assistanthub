@@ -169,7 +169,7 @@ const DesignLab = () => {
                         <div className="text-red-400 text-lg">{error}</div>
                         <button
                             onClick={() => setState('idle')}
-                            className="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-xl font-medium transition-colors"
+                            className="px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 rounded-xl font-medium transition-all shadow-lg shadow-teal-500/20 hover:shadow-teal-500/30"
                         >
                             Tentar Novamente
                         </button>
