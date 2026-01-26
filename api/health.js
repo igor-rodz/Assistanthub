@@ -1,33 +1,28 @@
-// Standalone health check - NO external dependencies to debug 500 error
+// Health Check - Standalone, zero dependencies
+export const config = { runtime: 'edge' };
+
 
 export default async function handler(request) {
-    // Manually handle CORS
     if (request.method === 'OPTIONS') {
         return new Response(null, {
             status: 200,
             headers: {
                 'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+                'Access-Control-Allow-Methods': 'GET, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type',
             }
         });
     }
 
     try {
-        const envCheck = {
-            supabaseUrl: !!process.env.SUPABASE_URL,
-            supabaseKey: !!process.env.SUPABASE_KEY,
-            geminiKey: !!process.env.GEMINI_API_KEY,
-            corsOrigins: !!process.env.CORS_ORIGINS,
-            nodeVersion: process.version
-        };
-
         return new Response(JSON.stringify({
             status: "healthy",
-            mode: "standalone_debug",
-            environment: envCheck,
             timestamp: new Date().toISOString(),
-            message: "API is online (Dependencies secluded)"
+            environment: {
+                supabase: !!process.env.SUPABASE_URL,
+                gemini: !!process.env.GEMINI_API_KEY,
+                node: process.version
+            }
         }), {
             status: 200,
             headers: {
@@ -36,7 +31,7 @@ export default async function handler(request) {
             }
         });
     } catch (e) {
-        return new Response(JSON.stringify({ error: e.message, stack: e.stack }), {
+        return new Response(JSON.stringify({ error: e.message }), {
             status: 500,
             headers: {
                 'Content-Type': 'application/json',

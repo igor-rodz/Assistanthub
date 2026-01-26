@@ -1,85 +1,59 @@
 # Assistant Hub
 
-Sistema unificado de análise de erros, geração de designs e biblioteca de scripts com IA.
+Sistema de análise de erros e geração de designs com IA.
 
-## 🚀 Início Rápido
-
-### 1. Instalar Dependências
-
-```bash
-npm run install:all
-```
-
-### 2. Configurar Variáveis de Ambiente
-
-Crie um arquivo `.env` na raiz do projeto:
-
-```env
-# Supabase
-SUPABASE_URL=sua_url_do_supabase
-SUPABASE_KEY=sua_chave_do_supabase
-
-# Gemini AI
-GEMINI_API_KEY=sua_chave_do_gemini
-
-# CORS (opcional)
-CORS_ORIGINS=http://localhost:3000
-
-# Porta do servidor (opcional)
-PORT=8000
-```
-
-### 3. Iniciar o Projeto
-
-**Opção 1: Iniciar tudo junto (recomendado)**
-```bash
-npm run dev
-```
-
-**Opção 2: Iniciar separadamente**
-
-Terminal 1 (Backend):
-```bash
-npm run server
-```
-
-Terminal 2 (Frontend):
-```bash
-npm run client
-```
-
-## 📁 Estrutura do Projeto
+## 🏗️ Arquitetura
 
 ```
 assistant-hub/
-├── server.js              # Servidor Express (Backend)
-├── package.json           # Dependências do backend
-├── .env                   # Variáveis de ambiente
-├── frontend/              # Aplicação React
-│   ├── src/
-│   ├── public/
-│   └── package.json
-└── README.md
+├── api/                  # Serverless Functions (Vercel)
+│   ├── _helpers.js       # Utilitários compartilhados
+│   ├── health.js         # Health check
+│   ├── analyze-error.js  # Análise de erros com IA
+│   ├── design-lab/       
+│   │   └── create.js     # Geração de designs
+│   └── dashboard/
+│       ├── metrics.js    # Métricas do usuário
+│       ├── user.js       # Dados do usuário
+│       └── tools.js      # Lista de ferramentas
+├── frontend/             # React App
+└── vercel.json           # Configuração Vercel
 ```
 
-## 🔧 Endpoints da API
+## 🚀 Deploy (Vercel)
 
-- `GET /health` - Health check
-- `POST /api/analyze-error` - Análise de erros com IA
-- `POST /api/design-lab/create` - Criação de designs
-- `GET /api/credits/balance` - Saldo de créditos
+1. Conecte o repositório na Vercel
+2. Configure as variáveis de ambiente:
+   - `SUPABASE_URL`
+   - `SUPABASE_KEY`
+   - `GEMINI_API_KEY`
+3. Deploy automático a cada push
+
+## 💻 Desenvolvimento Local
+
+```bash
+# Instalar tudo
+npm run install:all
+
+# Rodar frontend
+npm run dev
+```
+
+## 🔧 API Endpoints
+
+| Endpoint | Método | Descrição |
+|----------|--------|-----------|
+| `/api/health` | GET | Health check |
+| `/api/analyze-error` | POST | Análise de erros com IA |
+| `/api/design-lab/create` | POST | Geração de designs |
+| `/api/dashboard/metrics` | GET | Métricas do usuário |
+| `/api/dashboard/user` | GET | Dados do usuário |
+| `/api/dashboard/tools` | GET | Lista de ferramentas |
 
 ## 🛠️ Tecnologias
 
-- **Backend**: Node.js + Express
-- **Frontend**: React + Vite
-- **IA**: Google Gemini AI
-- **Banco**: Supabase
-- **Autenticação**: Supabase Auth
-
-## 📝 Notas
-
-- O backend Python foi migrado para Node.js para simplificar o desenvolvimento
-- Tudo roda na mesma linguagem (JavaScript)
-- Não precisa mais de ambiente virtual Python
-- Estrutura mais simples e fácil de manter
+- **Frontend**: React + Tailwind CSS
+- **Backend**: Vercel Serverless Functions
+- **IA**: Google Gemini
+- **Database**: Supabase (PostgreSQL)
+- **Auth**: Supabase Auth

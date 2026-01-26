@@ -1,16 +1,14 @@
 {
-  "name": "assistant-hub-root",
+  "name": "assistant-hub",
   "version": "1.0.0",
-  "description": "Assistant Hub Monorepo",
+  "description": "AI Assistant Hub - Error Analysis and Design Generation",
+  "private": true,
   "scripts": {
-    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
-    "start:backend": "cd backend && npm start",
-    "start:frontend": "cd frontend && npm start"
+    "dev": "cd frontend && npm start",
+    "build": "cd frontend && npm run build",
+    "install:all": "npm install && cd api && npm install && cd ../frontend && npm install"
   },
-  "dependencies": {
-    "concurrently": "^8.2.2",
-    "@google/generative-ai": "^0.24.1",
-    "@supabase/supabase-js": "^2.91.0",
-    "uuid": "^11.0.5"
+  "devDependencies": {
+    "concurrently": "^8.2.2"
   }
 }

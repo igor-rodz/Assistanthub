@@ -1,5 +1,7 @@
 import { getSupabase, createResponse, createErrorResponse, corsHeaders } from '../_helpers.js';
 
+export const config = { runtime: 'edge' };
+
 export default async function handler(request) {
     if (request.method === 'OPTIONS') {
         return new Response(null, { status: 200, headers: corsHeaders() });
