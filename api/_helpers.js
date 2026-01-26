@@ -9,8 +9,8 @@ let geminiModel = null;
 export async function getSupabase() {
     if (!supabaseClient) {
         const { createClient } = await import('@supabase/supabase-js');
-        const url = process.env.SUPABASE_URL?.trim();
-        const key = process.env.SUPABASE_KEY?.trim();
+        const url = (process.env.SUPABASE_URL || 'https://ipxpsxzllgnklqynkymr.supabase.co')?.trim();
+        const key = (process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlweHBzeHpsbGdua2xxeW5reW1yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0ODgxODEsImV4cCI6MjA4NDA2NDE4MX0.9YmBqz5kZS69cZ5GLOKRTrGNstPBWMvmwaLhSWRpoHU')?.trim();
 
         if (!url || !key) {
             throw { status: 500, message: 'Missing Supabase credentials' };
