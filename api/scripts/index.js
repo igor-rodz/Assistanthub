@@ -9,7 +9,7 @@ export default async function handler(request) {
 
     try {
         await requireAuth(request); // Must be logged in
-        const supabase = await getSupabase(); // Use Standard Client (RLS applies)
+        const supabase = await getSupabase(true); // Use Admin Client (bypass RLS)
 
         // GET - Listar scripts ativos
         if (request.method === 'GET') {
