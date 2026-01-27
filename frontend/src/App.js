@@ -10,7 +10,7 @@ import DiagnosticResult from "@/components/DiagnosticResult";
 import UserProfile from "@/components/UserProfile";
 import SettingsScreen from "@/components/Settings";
 import RuixenMoonChat from "@/components/ui/ruixen-moon-chat";
-import { DesignLab } from "@/components/designlab";
+// DesignLab import removed
 import { ScriptLibrary } from "@/components/scripts";
 import { AdminLayout, AdminDashboard, AdminUsers, AdminCredits, AdminUsageLogs, AdminScripts } from "@/components/admin";
 import Layout from "@/components/Layout";
@@ -271,14 +271,7 @@ const DashboardPage = () => {
       color: 'purple',
       available: true
     },
-    {
-      id: 'tool-2',
-      name: 'Laboratório de Design',
-      description: 'Crie e edite interfaces de usuário com assistência inteligente.',
-      icon: 'star',
-      color: 'blue',
-      available: true
-    },
+    // Tool 2 removed
     {
       id: 'tool-3',
       name: 'Scripts Premium',
@@ -323,8 +316,6 @@ const DashboardPage = () => {
     const tool = tools.find(t => t.id === toolId);
     if (toolId === 'tool-1' || tool?.name === 'One Shot Fixes') {
       navigate('/correcoes');
-    } else if (toolId === 'tool-2' || tool?.name === 'Laboratório de Design') {
-      navigate('/design-lab');
     } else if (toolId === 'tool-3' || tool?.name === 'Scripts Premium') {
       navigate('/scripts');
     }
@@ -541,9 +532,7 @@ const SettingsPage = () => {
   );
 };
 
-const DesignLabPage = () => {
-  return <DesignLab />;
-};
+// DesignLabPage component removed
 
 
 
@@ -619,13 +608,7 @@ function App() {
               </Layout>
             </ProtectedRoute>
           } />
-          <Route path="/design-lab" element={
-            <ProtectedRoute>
-              <Layout>
-                <DesignLabPage />
-              </Layout>
-            </ProtectedRoute>
-          } />
+          {/* DesignLab Route Removed */}
           <Route path="/scripts" element={
             <ProtectedRoute>
               <Layout>

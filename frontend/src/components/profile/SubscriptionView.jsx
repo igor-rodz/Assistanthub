@@ -21,40 +21,29 @@ const SubscriptionView = ({ credits, onUpgrade }) => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
                 {/* Plan Cards */}
                 <PlanCard
                     title="Starter"
                     price="19,90"
-                    credits="300"
-                    features={['OneShot Fixes']}
-                    missing={['Design Lab', 'Scripts Premium']}
+                    credits="500"
+                    features={['OneShot Fixes', 'Scripts Premium']}
+                    missing={[]}
                     isActive={currentPlan === 'starter'}
                     onSelect={() => onUpgrade('starter')}
                     color="zinc"
                 />
 
                 <PlanCard
-                    title="Builder"
-                    price="24,90"
-                    credits="500"
-                    features={['OneShot Fixes', 'Design Lab']}
-                    missing={['Scripts Premium']}
-                    isActive={currentPlan === 'builder'}
-                    onSelect={() => onUpgrade('builder')}
-                    color="blue"
-                    isPopular
-                />
-
-                <PlanCard
                     title="Pro"
-                    price="34,90"
+                    price="29,90"
                     credits="1.000"
-                    features={['OneShot Fixes', 'Design Lab', 'Scripts Premium']}
+                    features={['OneShot Fixes', 'Scripts Premium', 'Suporte Prioritário']}
                     missing={[]}
                     isActive={currentPlan === 'pro'}
                     onSelect={() => onUpgrade('pro')}
                     color="purple"
+                    isPopular
                 />
             </div>
 
@@ -121,8 +110,8 @@ const PlanCard = ({ title, price, credits, features, missing, isActive, onSelect
                     onClick={onSelect}
                     disabled={isActive}
                     className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-all mb-8 ${isActive
-                            ? 'bg-white/5 text-zinc-500 cursor-default'
-                            : 'bg-white text-black hover:bg-zinc-200'
+                        ? 'bg-white/5 text-zinc-500 cursor-default'
+                        : 'bg-white text-black hover:bg-zinc-200'
                         }`}
                 >
                     {isActive ? 'Plano Atual' : 'Selecionar Plano'}
