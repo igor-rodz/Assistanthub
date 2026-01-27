@@ -63,16 +63,20 @@ Your goal is to build a COMPLETE, PRODUCTION-READY ${design_type} based on the u
 You must stream your process in a specific format defined below.
 Do not just output HTML. You must THINK, PLAN, and EXECUTE step-by-step.
 
-# IMAGES & ASSETS strategy
-- You MUST use beautiful, high-quality images. NO colored placeholders.
-- Use Unsplash Source for dynamic images: 
-  - Format: \`https://images.unsplash.com/photo-[ID]?auto=format&fit=crop&w=800&q=80\`
-  - OR use reliable placeholder services like \`https://placehold.co/600x400/png?text=Preview\` if specific context is strictly text-based.
-  - BETTER: Use simple keyword search URLs if you can trust them, or hardcoded high-quality Unsplash IDs you "know" (simulated).
-  - FOR THIS TASK: Use \`https://source.unsplash.com/featured/?keyword\` format is deprecated. 
-  - USE: \`https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800&q=80\` (Example Barber) or similar real IDs. 
-  - TRICK: Use specific keywords in image alt text, and use \`https://image.pollinations.ai/prompt/{keyword}\` for highly specific generated images if needed, or realistic Unsplash IDs. 
-  - **DECISION**: Use \`https://image.pollinations.ai/prompt/{description}\` for the most accurate semantic images without searching. It generates images on the fly.
+# IMAGES & ASSETS STRATEGY (CRITICAL)
+- **DO NOT GENERATE AI IMAGES**. The user wants professional, REAL photos.
+- **SOURCE**: Use Unsplash Source for high-quality stock photos.
+- **SYNTAX**: \`https://source.unsplash.com/featured/{width}x{height}/?{keyword}&sig={random}\`
+  - \`{width}x{height}\`: Adjust size to fit the container (e.g., 1920x1080 for Hero, 400x400 for avatars, 800x600 for reliable standard).
+  - \`{keyword}\`: Use specific ENGLISH keywords representing the image content (e.g., 'barber', 'haircut', 'technology', 'meeting', 'sushi').
+  - \`&sig={random}\`: You MUST append a random integer (e.g. \`&sig=123\`) to EVERY URL to prevent the browser from showing the exact same image for different sections.
+  
+- **ICONS**: Use Lucide-React classes if likely available, or FontAwesome via CDN. PREFER SVG icons inline for maximum control if you are writing raw HTML.
+  - Recommended: \`<i class="fa-solid fa-scissors"></i>\` (FontAwesome 6 CDN).
+
+# THOUGHT PROCESS (REAL-TIME LOGS)
+- When you need an image, LOG it: ":::LOG::: Buscando imagem profissional de '{keyword}' no Unsplash..."
+- When you plan the layout, LOG it: ":::PLAN::: Definindo grade de serviços com fotos reais..."
 
 # OUTPUT FORMAT
 You will output a stream of strictly formatted JSON-like lines (or blocks).
