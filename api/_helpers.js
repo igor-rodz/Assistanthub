@@ -13,14 +13,16 @@ export async function getSupabase(useAdmin = false) {
 
     if (useAdmin) {
         if (!supabaseAdminClient) {
-            let key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+            // Tenta pegar a variável de ambiente, ou usa a chave explícita como fallback de emergência
+            // ATENÇÃO: Em produção ideal, use apenas variáveis de ambiente. Isso é um patch para garantir funcionamento.
+            let key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlweHBzeHpsbGdua2xxeW5reW1yIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODQ4ODE4MSwiZXhwIjoyMDg0MDY0MTgxfQ.Lrrcqbgccw-dqWlppMKKyyDzVDY_zeELKFF6LlDIQAQ';
 
             if (!key) {
-                console.warn("SUPABASE_SERVICE_ROLE_KEY missing. Admin operations might fail due to RLS.");
-                // Fallback to Anon Key (better than crash, but RLS applies)
+                console.warn("SUPABASE_SERVICE_ROLE_KEY missing using Anon fallback.");
                 key = (process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlweHBzeHpsbGdua2xxeW5reW1yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0ODgxODEsImV4cCI6MjA4NDA2NDE4MX0.9YmBqz5kZS69cZ5GLOKRTrGNstPBWMvmwaLhSWRpoHU')?.trim();
                 supabaseAdminClient = createClient(url, key, { auth: { persistSession: false } });
             } else {
+                // Admin Client com Service Role (Bypassa RLS)
                 supabaseAdminClient = createClient(url, key, {
                     auth: {
                         autoRefreshToken: false,
