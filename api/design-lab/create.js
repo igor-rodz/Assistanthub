@@ -56,44 +56,27 @@ export default async function handler(req, res) {
         // 4. The "Real Agent" System Prompt
         // We instruct the model to think out loud and emit events before code.
         const systemPrompt = `
-You are an Elite Frontend Architect.
-Your goal is to build a COMPLETE, PRODUCTION-READY ${design_type} based strictly on the user's request: "${prompt}".
+You are a professional UI designer and Frontend Developer.
+Your task is to generate a high-quality, professional website based on the user's request: "${prompt}".
 
-# ⚠️ PRIME DIRECTIVE: ANTI-LAZINESS & DEPTH
-1. **DO NOT RUSH**. High quality takes tokens. If you generate a 50-line HTML, you FAILED.
-2. **THINK FIRST**: You must explain your design decisions before writing code.
-3. **NO BROKEN ASSETS**: Use FontAwesome for icons. Use LoremFlickr for images.
+# INSTRUCTIONS
+1. **Design**: Use Tailwind CSS for styling. Create a modern, clean, and responsive design.
+2. **Icons**: YOU MUST USE FontAwesome CDN for icons: <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />. Use <i class="fa-solid fa-check"></i> syntax.
+3. **Images**: YOU MUST USE LoremFlickr for placeholder images: https://loremflickr.com/800/600/keyword.
+4. **Structure**: Write semantic HTML5 (header, section, footer).
+5. **Output**: Output ONLY the complete HTML code. Do not include markdown code blocks (\`\`\`html) or explanations inside the final code stream.
 
-# 🧠 AGENT PROTOCOL (SLOW THINKING MODE)
-Stream your response in this EXACT ORDER.
-
-### PHASE 1: GROUNDING (:::TOPIC:::)
-:::TOPIC::: [The exact industry requested]
-:::STYLE::: [Define colors/vibe. Ex: 'Dark/Red', 'Clean/Blue']
-
-### PHASE 2: DEEP ARCHITECTURE (:::PLAN:::)
-Write a detailed plan. Do not list generic sections. Describe the *Depth*.
-- BAD: "Hero section"
-- GOOD: "Hero section with 80vh height, gradient overlay, animated headline, and dual CTA buttons with hover-lift."
-:::PLAN::: [Detailed Plan]
-
-### PHASE 3: COMPONENT STRATEGY (:::THINKING:::)
-Critique your own plan.
-:::THINKING::: "Is this design premium enough? Does it use shadows? Glassmorphism? I need to ensure the grid is complex, not just 3 simple columns."
-
-### PHASE 4: CODING (:::CODE_START:::)
-Write the HTML & Tailwind CSS.
-- **ASSET RULES**:
-  - **Icons**: Use FontAwesome: \`<i class="fa-solid fa-check text-green-500"></i>\`. NEVER use \`<img>\` for icons.
-  - **Images**: \`https://loremflickr.com/800/600/haircut,salon/all?lock=1\`
-- **ENGINEERING STANDARDS**:
-  1. **Semantics**: \`<header>\`, \`<section>\`, \`<article>\`, \`<footer>\`.
-  2. **Spacing**: \`py-20 gap-8\`. No tight layouts.
-  3. **Visuals**: \`shadow-2xl rounded-2xl border border-white/10\`.
-  4. **Animation**: Inject \`@keyframes fadeInUp\` and use it.
-- **Completeness**: Write 100% of the code.
-
-Start streaming now.
+:::CODE_START:::
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generated Design</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+<body class="font-sans antialiased text-gray-900 bg-white">
 `;
 
         const result = await model.generateContentStream(systemPrompt);
