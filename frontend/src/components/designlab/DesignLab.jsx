@@ -52,26 +52,39 @@ const DesignLab = () => {
         try {
             console.log('[DesignLab] Iniciando Stream:', submittedPrompt);
 
-            // Use native fetch for streaming explicitly
-            const token = localStorage.getItem('supabase.auth.token')
-                ? JSON.parse(localStorage.getItem('supabase.auth.token')).currentSession?.access_token
-                : null;
+            // FIX: Robust Authentication Retrieval
+            let token = null;
 
-            // Fallback for getting token if using cookie auth or other method in lib/api
-            // Ideally we should export getToken from lib/api, but let's try direct access
-            let authHeader = {};
-            if (token) {
-                authHeader = { 'Authorization': `Bearer ${token}` };
-            } else {
-                // Try to match how api interceptor works or just hope for cookie auth if standard
-                // For now assuming token in localStorage as standard Supabase
+            // 1. Try to find Supabase token in LocalStorage (key pattern: sb-<ref>-auth-token)
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('sb-') && key.endsWith('-auth-token')) {
+                    try {
+                        const sessionData = JSON.parse(localStorage.getItem(key));
+                        token = sessionData?.access_token;
+                        if (token) break;
+                    } catch (e) { console.warn('Invalid session json', key); }
+                }
+            }
+
+            // 2. Fallback: Check possible legacy key
+            if (!token) {
+                try {
+                    const legacy = JSON.parse(localStorage.getItem('supabase.auth.token'));
+                    token = legacy?.currentSession?.access_token;
+                } catch (e) { }
+            }
+
+            if (!token) {
+                console.error("Token de autenticação não encontrado!");
+                throw new Error("Você precisa estar logado para criar designs. Tente sair e entrar novamente.");
             }
 
             const response = await fetch('/api/design-lab/create', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    ...authHeader
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
                     prompt: submittedPrompt,
@@ -81,8 +94,18 @@ const DesignLab = () => {
             });
 
             if (!response.ok) {
+                // If 401 happens again, standard API might handle refresh, but raw fetch won't.
+                if (response.status === 401) {
+                    throw new Error("Sessão expirada. Recarregue a página.");
+                }
                 const errText = await response.text();
-                throw new Error(errText || `Erro HTTP ${response.status}`);
+                // Try to parse json error if possible
+                try {
+                    const jsonErr = JSON.parse(errText);
+                    throw new Error(jsonErr.message || jsonErr.error || errText);
+                } catch (e) {
+                    throw new Error(errText || `Erro HTTP ${response.status}`);
+                }
             }
 
             // Stream Reader
@@ -109,7 +132,8 @@ const DesignLab = () => {
             const jsonEnd = cleanJson.lastIndexOf('}');
 
             if (jsonStart === -1 || jsonEnd === -1) {
-                throw new Error("Formato de resposta inválido (JSON não encontrado)");
+                console.error("Raw response:", accumulatedText);
+                throw new Error("Falha ao processar resposta do servidor (JSON inválido). Veja o console.");
             }
 
             const designData = JSON.parse(cleanJson.substring(jsonStart, jsonEnd + 1));
@@ -128,11 +152,11 @@ const DesignLab = () => {
 
     const handleRefine = async (refinement) => {
         if (!currentJob?.job_id) return;
-
         setState('generating');
         setGeneratingMessages(['Aplicando refinamentos...']);
-
         try {
+            // Note: Refine is still using axios (api) which is fine for short requests,
+            // but if refine becomes complex, it should also move to streaming.
             const response = await api.post(
                 `/design-lab/refine?job_id=${currentJob.job_id}&refinement=${encodeURIComponent(refinement)}`
             );
@@ -198,7 +222,7 @@ const DesignLab = () => {
 
                 {state === 'error' && (
                     <div className="flex flex-col items-center justify-center h-full gap-6">
-                        <div className="text-red-400 text-lg">{error}</div>
+                        <div className="text-red-400 text-lg text-center max-w-md">{error}</div>
                         <button
                             onClick={() => setState('idle')}
                             className="px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 rounded-xl font-medium transition-all shadow-lg shadow-teal-500/20 hover:shadow-teal-500/30"
