@@ -12,7 +12,7 @@ import SettingsScreen from "@/components/Settings";
 import RuixenMoonChat from "@/components/ui/ruixen-moon-chat";
 import { DesignLab } from "@/components/designlab";
 import { ScriptLibrary } from "@/components/scripts";
-import { AdminLayout, AdminDashboard, AdminUsers, AdminCredits, AdminUsageLogs } from "@/components/admin";
+import { AdminLayout, AdminDashboard, AdminUsers, AdminCredits, AdminUsageLogs, AdminScripts } from "@/components/admin";
 import Layout from "@/components/Layout";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 import { Meteors } from "@/components/ui/meteors";
@@ -661,6 +661,13 @@ function App() {
             <ProtectedRoute>
               <AdminLayout>
                 <AdminUsageLogs />
+              </AdminLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/scripts" element={
+            <ProtectedRoute>
+              <AdminLayout>
+                <AdminScripts />
               </AdminLayout>
             </ProtectedRoute>
           } />

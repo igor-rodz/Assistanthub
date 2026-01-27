@@ -38,6 +38,11 @@ const AdminLayout = ({ children }) => {
             label: "Uso & Logs",
             href: "/admin/usage-logs",
             icon: Activity
+        },
+        {
+            label: "Scripts Premium",
+            href: "/admin/scripts",
+            icon: Shield
         }
     ];
 

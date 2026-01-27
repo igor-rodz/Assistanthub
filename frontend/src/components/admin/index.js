@@ -3,3 +3,4 @@ export { default as AdminDashboard } from './AdminDashboard';
 export { default as AdminUsers } from './AdminUsers';
 export { default as AdminCredits } from './AdminCredits';
 export { default as AdminUsageLogs } from './AdminUsageLogs';
+export { default as AdminScripts } from './AdminScripts';

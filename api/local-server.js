@@ -16,6 +16,8 @@ import adminUsers from './admin/users.js';
 import adminDashboardStats from './admin/dashboard/stats.js';
 import adminCreditsTransactions from './admin/credits/transactions.js';
 import adminUsageLogs from './admin/usage-logs.js';
+import adminScripts from './admin/scripts/index.js';
+import userScripts from './scripts/index.js';
 
 const app = express();
 const PORT = 8000;
@@ -80,6 +82,10 @@ app.all('/api/admin/users', adapt(adminUsers));
 app.all('/api/admin/dashboard/stats', adapt(adminDashboardStats));
 app.all('/api/admin/credits/transactions', adapt(adminCreditsTransactions));
 app.all('/api/admin/usage-logs', adapt(adminUsageLogs));
+app.all('/api/admin/scripts', adapt(adminScripts));
+
+// Scripts (User)
+app.all('/api/scripts', adapt(userScripts));
 
 // Design Lab
 app.all('/api/design-lab/create', adapt(create));
