@@ -140,7 +140,7 @@ Quality over speed. Create something professional and complete. The user is coun
             temperature: 0.7, // Balanced creativity vs consistency
             topP: 0.95,
             topK: 40,
-            maxOutputTokens: 8192, // Allow for large, complete designs
+            maxOutputTokens: 4096, // Reduced to stay within Gemini's 16K output limit
         };
 
         // Create a new model instance with generation config
@@ -151,9 +151,25 @@ Quality over speed. Create something professional and complete. The user is coun
             generationConfig: generationConfig
         });
 
-        const result = await configuredModel.generateContent(aiPrompt);
-        const response = await result.response;
-        let text = response.text();
+        let result, response, text;
+        try {
+            result = await configuredModel.generateContent(aiPrompt);
+            response = await result.response;
+            text = response.text();
+        } catch (genError) {
+            console.error("Gemini Generation Error:", genError);
+            // Check if it's a token limit error
+            if (genError.message?.includes('max tokens') || genError.message?.includes('token limit')) {
+                throw {
+                    status: 400,
+                    message: "O prompt é muito complexo. Tente simplificar a descrição ou divida em partes menores."
+                };
+            }
+            throw {
+                status: 500,
+                message: `Erro ao gerar design: ${genError.message || 'Erro desconhecido'}`
+            };
+        }
 
         text = text.replace(/```json/g, '').replace(/```/g, '').trim();
         const jsonStart = text.indexOf('{');
