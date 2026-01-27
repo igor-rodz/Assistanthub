@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { X, Copy, Check, FileText, Tag } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Sandpack } from "@codesandbox/sandpack-react";
+import { SANDPACK_FILES, COMMON_DEPENDENCIES } from '@/lib/sandpack-files';
 
 const ScriptModal = ({ script, onClose }) => {
     const [copied, setCopied] = useState(false);
@@ -22,10 +24,10 @@ const ScriptModal = ({ script, onClose }) => {
                 onClick={onClose}
             />
 
-            <div className="relative w-full max-w-4xl max-h-[90vh] bg-[#0a0a0c] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
+            <div className="relative w-full max-w-6xl h-[90vh] bg-[#0a0a0c] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
 
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#0f0f13]">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#0f0f13] shrink-0">
                     <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center text-purple-400">
                             <FileText size={20} />
@@ -71,26 +73,31 @@ const ScriptModal = ({ script, onClose }) => {
                     </div>
                 </div>
 
-                {/* Description */}
-                {script.description && (
-                    <div className="px-6 py-3 bg-white/[0.02] border-b border-white/5">
-                        <p className="text-sm text-white/60">{script.description}</p>
-                    </div>
-                )}
-
-                {/* Script Content */}
-                <div className="flex-1 overflow-auto p-6">
-                    <div className="bg-[#050507] border border-white/5 rounded-xl p-5 min-h-[300px]">
-                        <pre className="text-sm leading-relaxed text-white/80 font-mono whitespace-pre-wrap break-words">
-                            {script.script_content || 'Sem conteúdo disponível.'}
-                        </pre>
-                    </div>
-                </div>
-
-                {/* Footer */}
-                <div className="px-6 py-3 bg-[#0f0f13] border-t border-white/5 text-xs text-white/30 flex justify-between items-center">
-                    <span>Criado em: {script.created_at ? new Date(script.created_at).toLocaleDateString('pt-BR') : 'N/A'}</span>
-                    <span>Clique em "Copiar Script" para usar em seu projeto</span>
+                {/* Main Content (Sandpack Full) */}
+                <div className="flex-1 overflow-hidden relative bg-[#050505]">
+                    <Sandpack
+                        template="react-ts"
+                        theme="dark"
+                        files={{
+                            ...SANDPACK_FILES,
+                            "/App.tsx": script.script_content,
+                        }}
+                        customSetup={{
+                            dependencies: COMMON_DEPENDENCIES
+                        }}
+                        options={{
+                            showNavigator: false,
+                            showTabs: true, // Mostra abas Code/Preview
+                            showConsole: false,
+                            editorHeight: "100%", // Ocupa todo espaço disponível
+                            layout: "preview", // Preview à direita por padrão (responsivo)
+                            classes: {
+                                "sp-layout": "!h-full !border-none !rounded-none",
+                                "sp-preview": "!h-full",
+                                "sp-preview-iframe": "!h-full",
+                            }
+                        }}
+                    />
                 </div>
             </div>
         </div>
