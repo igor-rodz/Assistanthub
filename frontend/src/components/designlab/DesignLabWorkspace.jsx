@@ -8,26 +8,18 @@ import {
     Copy,
     Check,
     ChevronDown,
-    ChevronRight,
     Clock,
     Sparkles,
     Code2,
     Eye,
-    Layers,
     Grid3X3,
     ZoomIn,
     ZoomOut,
-    RotateCcw,
     Maximize2,
     Plus,
     MessageSquare,
     Palette,
-    Wand2,
-    Share2,
-    FileCode,
-    Undo2,
-    Settings2,
-    Layout
+    FileCode
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import DesignLabPreview from './DesignLabPreview';
@@ -40,7 +32,6 @@ const DesignLabWorkspace = ({ job, prompt, onRefine, onNewDesign }) => {
     const [refinementText, setRefinementText] = useState('');
     const [viewport, setViewport] = useState('desktop');
     const [copied, setCopied] = useState(false);
-    const [showCodePanel, setShowCodePanel] = useState(false);
     const [showGrid, setShowGrid] = useState(false);
     const [zoom, setZoom] = useState(100);
     const [activeTab, setActiveTab] = useState('preview'); // preview, code
@@ -184,12 +175,10 @@ ${job.html || ''}
         }
     };
 
-    const quickSuggestions = [
-        { icon: Palette, label: 'Mudar cores', prompt: 'Mude a paleta de cores para tons mais vibrantes' },
-        { icon: Layout, label: 'Ajustar layout', prompt: 'Melhore o espaçamento e alinhamento dos elementos' },
-        { icon: Wand2, label: 'Adicionar animações', prompt: 'Adicione animações sutis aos elementos interativos' },
-        { icon: Layers, label: 'Modernizar', prompt: 'Aplique um visual mais moderno e premium' }
-    ];
+    // Determine if we are still working (generating or initial 'idle' before completion)
+    // If status is 'generating', we show skeleton. Only 'complete' or 'error' shows preview/code.
+    // Actually, 'error' with partial code is tricky, but let's assume complete.
+    const isGenerating = job.status === 'generating';
 
     return (
         <div className={cn(
@@ -206,54 +195,38 @@ ${job.html || ''}
                         ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
                         : "bg-red-500/10 border border-red-500/20 text-red-400"
                 )}>
-                    <Check size={16} />
+                    {notification.type === 'success' ? <Check size={16} /> : null}
                     {notification.message}
                 </div>
             )}
 
-            {/* Left Sidebar - Enhanced Chat Panel */}
+            {/* Left Sidebar - Chat & Agent Panel */}
             {!isFullscreen && (
                 <div className="w-[340px] bg-[#0c0c0e] border-r border-white/[0.06] flex flex-col">
-                    {/* Header with project info */}
-                    <div className="px-5 py-4 border-b border-white/[0.06]">
-                        <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-teal-500/20">
+                    {/* Header with project info - Adjusted Spacing */}
+                    <div className="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between">
+                        <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-teal-500/20 shrink-0">
                                 <Sparkles size={16} className="text-white" />
                             </div>
-                            <div className="flex-1 min-w-0">
-                                <h3 className="text-sm font-semibold text-white truncate">
-                                    {prompt.length > 30 ? prompt.substring(0, 30) + '...' : prompt}
+                            <div className="min-w-0">
+                                <h3 className="text-sm font-semibold text-white truncate max-w-[160px]">
+                                    {prompt}
                                 </h3>
-                                <p className="text-xs text-white/40 mt-0.5">Design gerado</p>
+                                <p className="text-xs text-white/40 mt-0.5">Design Lab</p>
                             </div>
-                            <button
-                                onClick={onNewDesign}
-                                className="p-2 rounded-lg hover:bg-white/[0.05] text-white/40 hover:text-white/70 transition-all"
-                            >
-                                <Plus size={18} />
-                            </button>
                         </div>
-                    </div>
-
-                    {/* Quick Suggestions */}
-                    <div className="px-4 py-3 border-b border-white/[0.06]">
-                        <p className="text-[11px] font-medium text-white/30 uppercase tracking-wider mb-2">Sugestões rápidas</p>
-                        <div className="flex flex-wrap gap-1.5">
-                            {quickSuggestions.map((suggestion, idx) => (
-                                <button
-                                    key={idx}
-                                    onClick={() => setRefinementText(suggestion.prompt)}
-                                    className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-white/50 bg-white/[0.03] hover:bg-white/[0.06] hover:text-white/70 rounded-lg transition-all border border-white/[0.04] hover:border-white/[0.08]"
-                                >
-                                    <suggestion.icon size={12} />
-                                    {suggestion.label}
-                                </button>
-                            ))}
-                        </div>
+                        <button
+                            onClick={onNewDesign}
+                            className="p-2 rounded-lg hover:bg-white/[0.05] text-white/40 hover:text-white/70 transition-all shrink-0"
+                            title="Novo Design"
+                        >
+                            <Plus size={18} />
+                        </button>
                     </div>
 
                     {/* Chat History & Logs */}
-                    <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+                    <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                         {iterations.map((item, idx) => (
                             <div
                                 key={item.id}
@@ -276,22 +249,20 @@ ${job.html || ''}
                             </div>
                         ))}
 
-                        {/* Active Agent Logs - The "Bolt" Effect */}
-                        {job.status === 'generating' && (
-                            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        {/* Active Agent Logs */}
+                        {isGenerating && (
+                            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 pb-4">
                                 <div className="flex items-center gap-2 text-[11px] text-teal-400 mb-2">
                                     <div className="w-5 h-5 rounded-full bg-teal-500/20 flex items-center justify-center animate-pulse">
                                         <Sparkles size={10} className="text-teal-400" />
                                     </div>
                                     <span className="font-medium">IA Trabalhando...</span>
                                 </div>
-                                <div className="ml-7 space-y-2">
+                                <div className="ml-7 space-y-2 relative pl-2 border-l border-white/10">
                                     {job.logs && job.logs.map((log, i) => (
                                         <div key={i} className="flex items-center gap-2 text-xs text-white/50 animate-in fade-in duration-300">
-                                            {i === job.logs.length - 1 ? (
-                                                <div className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-ping" />
-                                            ) : (
-                                                <div className="w-1.5 h-1.5 rounded-full bg-white/20" />
+                                            {i === job.logs.length - 1 && (
+                                                <div className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-ping absolute -left-[3.5px]" />
                                             )}
                                             <span>{log}</span>
                                         </div>
@@ -300,7 +271,22 @@ ${job.html || ''}
                             </div>
                         )}
 
-                        {/* Error State in Chat */}
+                        {/* Completion Message */}
+                        {job.status === 'complete' && (
+                            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 pb-4">
+                                <div className="flex items-center gap-2 text-[11px] text-emerald-400 mb-2">
+                                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                                        <Check size={10} className="text-emerald-400" />
+                                    </div>
+                                    <span className="font-medium">Finalizado</span>
+                                </div>
+                                <div className="ml-7 bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-3 text-xs text-emerald-200/70">
+                                    Design criado com sucesso. O código foi gerado e validado.
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Error Message */}
                         {job.status === 'error' && (
                             <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                                 <div className="flex items-center gap-2 text-[11px] text-red-400 mb-2">
@@ -316,8 +302,7 @@ ${job.html || ''}
                         )}
                     </div>
 
-
-                    {/* Enhanced Input Area */}
+                    {/* Input Area */}
                     <div className="p-4 border-t border-white/[0.06] bg-[#0a0a0c]">
                         <div className="relative bg-white/[0.03] rounded-xl border border-white/[0.08] focus-within:border-teal-500/30 focus-within:shadow-lg focus-within:shadow-teal-500/5 transition-all">
                             <textarea
@@ -330,16 +315,17 @@ ${job.html || ''}
                                         handleRefine();
                                     }
                                 }}
-                                placeholder="Descreva as alterações que deseja..."
-                                className="w-full bg-transparent px-4 py-3 pr-12 text-sm text-white placeholder:text-white/25 focus:outline-none resize-none min-h-[44px] max-h-[120px]"
+                                disabled={isGenerating}
+                                placeholder={isGenerating ? "Aguardando agente finalizar..." : "Descreva as alterações que deseja..."}
+                                className="w-full bg-transparent px-4 py-3 pr-12 text-sm text-white placeholder:text-white/25 focus:outline-none resize-none min-h-[44px] max-h-[120px] disabled:opacity-50"
                                 rows={1}
                             />
                             <button
                                 onClick={handleRefine}
-                                disabled={!refinementText.trim()}
+                                disabled={!refinementText.trim() || isGenerating}
                                 className={cn(
                                     "absolute right-2.5 bottom-2.5 p-2 rounded-lg transition-all duration-200",
-                                    refinementText.trim()
+                                    refinementText.trim() && !isGenerating
                                         ? "bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg shadow-teal-500/25 hover:shadow-teal-500/40 hover:scale-105"
                                         : "bg-white/[0.05] text-white/20 cursor-not-allowed"
                                 )}
@@ -358,7 +344,7 @@ ${job.html || ''}
             <div className="flex-1 flex flex-col min-w-0">
                 {/* Enhanced Top Bar - Fixed Layout */}
                 <div className="h-14 border-b border-white/[0.06] flex items-center px-4 bg-[#0a0a0c] gap-4 relative">
-                    {/* Left - Tab Navigation (Takes available space initially) */}
+                    {/* Left - Tab Navigation */}
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                         <div className="flex items-center gap-1 p-1 bg-white/[0.03] rounded-xl shrink-0">
                             <button
@@ -389,7 +375,7 @@ ${job.html || ''}
 
                         <div className="h-4 w-px bg-white/[0.08] shrink-0" />
 
-                        {/* Viewport Toggles (Hidden on very small screens) */}
+                        {/* Viewport Toggles */}
                         <div className="hidden md:flex items-center gap-1 p-1 bg-white/[0.03] rounded-xl shrink-0">
                             {[
                                 { id: 'desktop', icon: Monitor, label: 'Desktop' },
@@ -413,10 +399,9 @@ ${job.html || ''}
                         </div>
                     </div>
 
-                    {/* Center - Zoom Controls (Only show if space allows, usually centered) */}
+                    {/* Center - Zoom Controls */}
                     {activeTab === 'preview' && (
                         <div className="flex items-center gap-2 absolute left-1/2 -translate-x-1/2 pointer-events-none md:pointer-events-auto opacity-0 md:opacity-100 transition-opacity">
-                            {/* Keep absolute only for large screens where we WANT it centered, but hide on small screens or collision */}
                             <div className="flex items-center gap-1 p-1 bg-white/[0.03] rounded-xl shadow-sm border border-black/20">
                                 <button
                                     onClick={() => handleZoom('out')}
@@ -452,9 +437,8 @@ ${job.html || ''}
                         </div>
                     )}
 
-                    {/* Right - Actions (Takes available space at end) */}
+                    {/* Right - Actions */}
                     <div className="flex items-center gap-3 shrink-0 justify-end flex-1">
-                        {/* Zoom for mobile (shown only when center is hidden) */}
                         {activeTab === 'preview' && (
                             <div className="md:hidden flex items-center gap-1 bg-white/[0.03] rounded-lg px-2 py-1">
                                 <span className="text-xs text-white/50">{zoom}%</span>
@@ -596,7 +580,7 @@ ${job.html || ''}
                                     "bg-white rounded-xl overflow-hidden shadow-2xl shadow-black/50",
                                     viewport !== 'desktop' && "border-[8px] border-[#1c1c1e] rounded-[28px]"
                                 )}>
-                                    {job.html ? (
+                                    {!isGenerating && job.html ? (
                                         <DesignLabPreview
                                             html={job.html}
                                             css={job.css}
@@ -604,29 +588,36 @@ ${job.html || ''}
                                             zoom={100}
                                         />
                                     ) : (
-                                        <div className="w-full h-[600px] bg-white flex flex-col">
-                                            {/* Skeleton UI Header */}
-                                            <div className="h-16 border-b border-gray-100 flex items-center px-8 justify-between">
-                                                <div className="w-32 h-6 bg-gray-100 rounded animate-pulse" />
-                                                <div className="flex gap-4">
-                                                    <div className="w-16 h-4 bg-gray-100 rounded animate-pulse" />
-                                                    <div className="w-16 h-4 bg-gray-100 rounded animate-pulse" />
-                                                    <div className="w-16 h-4 bg-gray-100 rounded animate-pulse" />
-                                                </div>
-                                            </div>
-                                            {/* Skeleton UI Hero */}
-                                            <div className="flex-1 p-12 flex flex-col items-center justify-center space-y-6">
-                                                <div className="w-3/4 h-12 bg-gray-100 rounded-lg animate-pulse" />
-                                                <div className="w-1/2 h-4 bg-gray-100 rounded animate-pulse" />
-                                                <div className="flex gap-4 mt-8">
-                                                    <div className="w-32 h-10 bg-gray-200 rounded-lg animate-pulse" />
-                                                    <div className="w-32 h-10 bg-gray-100 rounded-lg animate-pulse" />
+                                        <div className="w-full h-[600px] bg-white flex flex-col items-center justify-center p-12">
+                                            {/* Beautiful Animated Skeleton */}
+                                            <div className="w-full max-w-3xl space-y-8 animate-pulse">
+                                                {/* Header Skeleton */}
+                                                <div className="flex justify-between items-center w-full border-b pb-4 mb-8">
+                                                    <div className="h-8 w-32 bg-gray-200 rounded" />
+                                                    <div className="flex gap-4">
+                                                        <div className="h-4 w-20 bg-gray-100 rounded" />
+                                                        <div className="h-4 w-20 bg-gray-100 rounded" />
+                                                    </div>
                                                 </div>
 
-                                                {/* Streaming text indicator */}
-                                                <div className="mt-12 w-full max-w-2xl p-4 rounded-lg bg-teal-50 border border-teal-100 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                                    <div className="w-4 h-4 rounded-full border-2 border-teal-500 border-t-transparent animate-spin" />
-                                                    <span className="text-sm text-teal-700 font-medium">Escrevendo código HTML...</span>
+                                                {/* Hero Skeleton */}
+                                                <div className="flex flex-col items-center space-y-4">
+                                                    <div className="h-12 w-3/4 bg-gray-200 rounded-lg" />
+                                                    <div className="h-4 w-1/2 bg-gray-100 rounded" />
+                                                    <div className="flex gap-4 mt-6">
+                                                        <div className="h-10 w-32 bg-teal-50 rounded-lg border border-teal-100" />
+                                                        <div className="h-10 w-32 bg-gray-100 rounded-lg" />
+                                                    </div>
+                                                </div>
+
+                                                {/* Loading Indicator */}
+                                                <div className="mt-12 flex flex-col items-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                                                    <div className="relative">
+                                                        <div className="w-12 h-12 rounded-full border-2 border-teal-100 border-t-teal-500 animate-spin" />
+                                                        <Sparkles className="absolute inset-0 m-auto text-teal-500 w-5 h-5 animate-pulse" />
+                                                    </div>
+                                                    <p className="text-sm font-medium text-teal-600">Construindo sua interface...</p>
+                                                    <p className="text-xs text-gray-400">Isso pode levar alguns segundos.</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -690,8 +681,11 @@ ${job.html || ''}
                 <div className="h-8 border-t border-white/[0.06] flex items-center justify-between px-4 bg-[#0a0a0c] text-[11px] text-white/30">
                     <div className="flex items-center gap-4">
                         <span className="flex items-center gap-1.5">
-                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                            Design gerado com sucesso
+                            <div className={cn(
+                                "w-2 h-2 rounded-full",
+                                isGenerating ? "bg-amber-500 animate-pulse" : "bg-emerald-500"
+                            )} />
+                            {isGenerating ? "Gerando design..." : "Design pronto"}
                         </span>
                         <span>•</span>
                         <span>Viewport: {viewport}</span>
