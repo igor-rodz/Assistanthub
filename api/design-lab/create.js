@@ -127,9 +127,12 @@ Respond ONLY with valid JSON (no markdown, no \`\`\`json wrapper).
 - GSAP for animations if needed: <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 - No React/Vue - pure HTML + Tailwind + vanilla JS only
 - Complete, working code that opens perfectly in a browser
+- **OPTIMIZE FOR SIZE**: Use concise class names, avoid repetitive code, keep HTML clean and minimal
+- **TOKEN LIMIT**: Your response must be under 4000 tokens. Be efficient with code structure.
 
 # REMEMBER
 Quality over speed. Create something professional and complete. The user is counting on you to deliver exactly what they asked for.
+**IMPORTANT**: Keep the code concise and optimized to stay within token limits.
 `;
 
         const model = await getGeminiModel();
