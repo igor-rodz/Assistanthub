@@ -68,7 +68,7 @@ You are an expert UI/UX designer and front-end engineer. Your job is to create p
 - Attention to detail in styling and interactions
 `;
 
-export const config = { runtime: 'edge' };
+// export const config = { runtime: 'edge' }; // Disabled to allow longer timeouts with Node.js runtime
 
 export default async function handler(request) {
     if (request.method === 'OPTIONS') {
@@ -133,7 +133,7 @@ Quality over speed. Create something professional and complete. The user is coun
 `;
 
         const model = await getGeminiModel();
-        
+
         // Configure generation for quality and completeness
         // Use generateContent with config for better quality output
         const generationConfig = {
@@ -142,15 +142,15 @@ Quality over speed. Create something professional and complete. The user is coun
             topK: 40,
             maxOutputTokens: 8192, // Allow for large, complete designs
         };
-        
+
         // Create a new model instance with generation config
         const { GoogleGenerativeAI } = await import('@google/generative-ai');
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY?.trim());
-        const configuredModel = genAI.getGenerativeModel({ 
+        const configuredModel = genAI.getGenerativeModel({
             model: "gemini-2.0-flash-exp",
             generationConfig: generationConfig
         });
-        
+
         const result = await configuredModel.generateContent(aiPrompt);
         const response = await result.response;
         let text = response.text();
