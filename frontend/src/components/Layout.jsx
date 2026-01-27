@@ -5,6 +5,8 @@ import { LayoutDashboard, Settings, LogOut, Wand2, Coins, Code2 } from "lucide-r
 import { motion } from "framer-motion";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import { UserMenu } from "@/components/ui/user-menu";
+import { supabase } from "@/lib/supabaseClient";
 
 // Logo Component
 const Logo = () => {
@@ -110,13 +112,7 @@ const Layout = ({ children }) => {
                 <Settings className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
             ),
         },
-        {
-            label: "Sair",
-            href: "/",
-            icon: (
-                <LogOut className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-            ),
-        },
+
     ];
 
     return (
@@ -136,76 +132,23 @@ const Layout = ({ children }) => {
                             ))}
                         </div>
                     </div>
-                    <div className="space-y-2">
-                        {/* Credit Balance */}
-                        <div
-                            className={cn(
-                                "relative overflow-hidden transition-all duration-300 rounded-xl border",
-                                credits.credit_balance < 10
-                                    ? 'bg-red-500/10 border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.1)]'
-                                    : 'bg-purple-500/10 border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.1)]',
-                                open ? "p-3 mx-0" : "p-2 mx-auto w-10 h-10 flex items-center justify-center"
-                            )}
-                        >
-                            <div className="flex items-center gap-3">
-                                <div className={cn(
-                                    "p-1.5 rounded-lg flex-shrink-0",
-                                    credits.credit_balance < 10 ? "bg-red-500/20" : "bg-purple-500/20"
-                                )}>
-                                    <Coins className={cn(
-                                        "h-4 w-4",
-                                        credits.credit_balance < 10 ? 'text-red-400' : 'text-purple-400'
-                                    )} />
-                                </div>
 
-                                {open && (
-                                    <div className="flex flex-col min-w-0">
-                                        <div className="flex items-center gap-1.5">
-                                            <span className={cn(
-                                                "text-sm font-bold tracking-tight",
-                                                credits.credit_balance < 10 ? 'text-red-400' : 'text-purple-400'
-                                            )}>
-                                                {credits.credit_balance?.toFixed(1)}
-                                            </span>
-                                            <span className="text-[10px] text-neutral-400 font-medium">créditos</span>
-                                        </div>
-                                        <span className="text-[9px] text-neutral-500 uppercase tracking-wider font-bold">
-                                            {credits.plan}
-                                        </span>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Decorative background glow */}
-                            <div className={cn(
-                                "absolute -right-2 -bottom-2 w-12 h-12 blur-2xl rounded-full opacity-20",
-                                credits.credit_balance < 10 ? "bg-red-500" : "bg-purple-500"
-                            )} />
-                        </div>
-                        {user && (
-                            <SidebarLink
-                                link={{
-                                    label: user.name,
-                                    href: "/perfil",
-                                    icon: (
-                                        <img
-                                            src={user.avatar}
-                                            className="h-7 w-7 flex-shrink-0 rounded-full"
-                                            width={50}
-                                            height={50}
-                                            alt="Avatar"
-                                        />
-                                    ),
-                                }}
-                            />
-                        )}
+                    <div className="mt-auto">
+                        <UserMenu
+                            user={user}
+                            credits={credits}
+                            onLogout={async () => {
+                                await supabase.auth.signOut();
+                                navigate('/login');
+                            }}
+                        />
                     </div>
                 </SidebarBody>
             </Sidebar>
             <div className="flex flex-col flex-1 w-full h-full overflow-y-auto bg-[#0a0a0f]">
                 {children}
             </div>
-        </div>
+        </div >
     );
 };
 

@@ -76,6 +76,10 @@ module.exports = {
 					'0%': { transform: 'rotate(215deg) translateX(0)', opacity: '1' },
 					'70%': { opacity: '1' },
 					'100%': { transform: 'rotate(215deg) translateX(-500px)', opacity: '0' }
+				},
+				"pulse-slow": {
+					'0%, 100%': { transform: 'translateX(-100%)' },
+					'50%': { transform: 'translateX(100%)' },
 				}
 			},
 			animation: {
@@ -83,7 +87,8 @@ module.exports = {
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'shimmer-slide': 'shimmer-slide var(--speed) ease-in-out infinite alternate',
 				'spin-around': 'spin-around calc(var(--speed) * 2) infinite linear',
-				'meteor-effect': 'meteor 5s linear infinite'
+				'meteor-effect': 'meteor 5s linear infinite',
+				"pulse-slow": "pulse-slow 3s ease-in-out infinite"
 			}
 		}
 	},

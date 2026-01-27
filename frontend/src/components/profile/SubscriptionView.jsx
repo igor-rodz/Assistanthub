@@ -1,188 +1,162 @@
 import React from 'react';
-import { CreditCard, CheckCircle, Calendar, Zap, Crown } from 'lucide-react';
+import { CreditCard, CheckCircle, Calendar, Zap, Crown, Check, X } from 'lucide-react';
 
 const SubscriptionView = ({ credits, onUpgrade }) => {
     const currentPlan = credits?.plan || 'starter';
     const planPrice = credits?.plan_price || 19.90;
 
     return (
-        <div className="max-w-4xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* Current Subscription Card */}
-            <div className="glass-panel p-8 rounded-3xl relative overflow-hidden group">
-                <div className="flex items-start justify-between mb-8">
-                    <div className="flex gap-4">
-                        <div className="w-12 h-12 rounded-xl glass-panel flex items-center justify-center text-white/60">
-                            <CreditCard size={24} />
-                        </div>
-                        <div>
-                            <h3 className="text-xl font-bold text-white">Status da Assinatura</h3>
-                            <p className="text-white/40 text-sm">Gerencie sua assinatura e veja detalhes do plano atual</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-semibold neon-blue">
-                        <CheckCircle size={14} />
-                        Ativo
-                    </div>
+        <div className="max-w-6xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight text-white mb-2">Assinatura & Planos</h1>
+                    <p className="text-zinc-400">Gerencie seu nível de acesso e capacidade de processamento.</p>
                 </div>
 
-                <div className="space-y-6">
-                    <div className="flex justify-between items-center py-2 border-b border-white/5">
-                        <span className="text-white/50">Plano Atual:</span>
-                        <span className="font-bold text-lg text-white capitalize">{currentPlan}</span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b border-white/5">
-                        <span className="text-white/50">Valor:</span>
-                        <span className="font-bold text-lg text-white">R$ {planPrice?.toFixed(2)}/mês</span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b border-white/5">
-                        <span className="text-white/50">Créditos:</span>
-                        <span className="font-bold text-lg text-white">{credits?.monthly_limit || 300}/mês</span>
-                    </div>
-                    <div className="flex justify-between items-center py-2">
-                        <span className="text-white/50">Próxima cobrança:</span>
-                        <div className="flex items-center gap-2 font-semibold text-white">
-                            <Calendar size={16} className="text-white/40" />
-                            Renovação mensal
-                        </div>
-                    </div>
+                {/* Active Plan Badge */}
+                <div className="flex items-center gap-3 px-4 py-2 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+                    <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></div>
+                    <span className="text-sm font-medium text-purple-200">Plano {currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)} Ativo</span>
                 </div>
-
-                <button className="w-full mt-8 py-4 rounded-2xl glass-panel hover:bg-white/5 text-white/60 hover:text-white transition-all font-semibold">
-                    Cancelar Plano
-                </button>
             </div>
 
-            {/* Upgrade Section */}
-            <div className="space-y-6">
-                <h3 className="text-sm font-bold tracking-widest text-white/40 uppercase">Fazer Upgrade</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Plan Cards */}
+                <PlanCard
+                    title="Starter"
+                    price="19,90"
+                    credits="300"
+                    features={['OneShot Fixes']}
+                    missing={['Design Lab', 'Scripts Premium']}
+                    isActive={currentPlan === 'starter'}
+                    onSelect={() => onUpgrade('starter')}
+                    color="zinc"
+                />
+
+                <PlanCard
+                    title="Builder"
+                    price="24,90"
+                    credits="500"
+                    features={['OneShot Fixes', 'Design Lab']}
+                    missing={['Scripts Premium']}
+                    isActive={currentPlan === 'builder'}
+                    onSelect={() => onUpgrade('builder')}
+                    color="blue"
+                    isPopular
+                />
+
+                <PlanCard
+                    title="Pro"
+                    price="34,90"
+                    credits="1.000"
+                    features={['OneShot Fixes', 'Design Lab', 'Scripts Premium']}
+                    missing={[]}
+                    isActive={currentPlan === 'pro'}
+                    onSelect={() => onUpgrade('pro')}
+                    color="purple"
+                />
+            </div>
+
+            {/* Current Billing Info */}
+            <div className="pt-8 border-t border-white/5">
+                <h3 className="text-sm font-semibold text-zinc-500 uppercase tracking-wider mb-6">Status de Faturamento</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Starter Plan */}
-                    <div className={`p-6 rounded-[2rem] glass-panel relative group cursor-pointer hover:scale-[1.02] transition-all ${currentPlan === 'starter' ? 'border-2 border-green-500/50' : 'border border-white/10'}`}>
-                        {currentPlan === 'starter' && (
-                            <div className="absolute top-4 right-4 px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-bold">
-                                Atual
-                            </div>
-                        )}
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
-                                <CreditCard className="text-white/60" size={20} />
-                            </div>
-                            <div>
-                                <h4 className="text-lg font-bold text-white">Starter</h4>
-                                <p className="text-white/40 text-xs">300 créditos/mês</p>
-                            </div>
-                        </div>
-
-                        <ul className="space-y-2 mb-6 text-white/60 text-sm">
-                            <li className="flex items-center gap-2">
-                                <CheckCircle size={14} className="text-green-400" />
-                                OneShot Fixes
-                            </li>
-                            <li className="flex items-center gap-2 text-white/30">
-                                <span className="w-3.5 h-3.5 flex items-center justify-center">✕</span>
-                                Design Lab
-                            </li>
-                            <li className="flex items-center gap-2 text-white/30">
-                                <span className="w-3.5 h-3.5 flex items-center justify-center">✕</span>
-                                Scripts Premium
-                            </li>
-                        </ul>
-
-                        <button
-                            disabled={currentPlan === 'starter'}
-                            className={`w-full py-3 rounded-xl font-bold transition-all ${currentPlan === 'starter' ? 'bg-white/5 text-white/30 cursor-not-allowed' : 'bg-white/10 hover:bg-white/20 text-white'}`}
-                        >
-                            R$ 19,90/mês
-                        </button>
-                    </div>
-
-                    {/* Builder Plan */}
-                    <div className={`p-6 rounded-[2rem] bg-gradient-to-br from-blue-600 to-blue-800 relative group cursor-pointer hover:scale-[1.02] transition-all ${currentPlan === 'builder' ? 'ring-2 ring-green-500' : ''}`}>
-                        {currentPlan === 'builder' && (
-                            <div className="absolute top-4 right-4 px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-bold">
-                                Atual
-                            </div>
-                        )}
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-                                <Zap className="text-white" size={20} />
-                            </div>
-                            <div>
-                                <h4 className="text-lg font-bold text-white">Builder</h4>
-                                <p className="text-white/70 text-xs">500 créditos/mês</p>
-                            </div>
-                        </div>
-
-                        <ul className="space-y-2 mb-6 text-white/90 text-sm">
-                            <li className="flex items-center gap-2">
-                                <CheckCircle size={14} className="text-white" />
-                                OneShot Fixes
-                            </li>
-                            <li className="flex items-center gap-2">
-                                <CheckCircle size={14} className="text-white" />
-                                Design Lab
-                            </li>
-                            <li className="flex items-center gap-2 text-white/50">
-                                <span className="w-3.5 h-3.5 flex items-center justify-center">✕</span>
-                                Scripts Premium
-                            </li>
-                        </ul>
-
-                        <button
-                            onClick={() => onUpgrade?.('builder')}
-                            disabled={currentPlan === 'builder'}
-                            className={`w-full py-3 rounded-xl font-bold transition-all border border-white/10 ${currentPlan === 'builder' ? 'bg-white/5 text-white/30 cursor-not-allowed' : 'bg-white/10 hover:bg-white/20 text-white'}`}
-                        >
-                            R$ 24,90/mês
-                        </button>
-                    </div>
-
-                    {/* Pro Plan */}
-                    <div className={`p-6 rounded-[2rem] glass-panel border relative group cursor-pointer hover:scale-[1.02] transition-all overflow-hidden ${currentPlan === 'pro' ? 'border-green-500' : 'border-purple-500/50'}`}>
-                        {/* Glow Effect */}
-                        <div className="absolute -top-10 -right-10 w-40 h-40 bg-purple-500/20 blur-[60px]"></div>
-
-                        <div className="absolute top-4 right-4 px-2 py-1 rounded-full bg-purple-500/20 text-purple-400 text-xs font-bold uppercase tracking-wider neon-purple">
-                            {currentPlan === 'pro' ? 'Atual' : 'Popular'}
-                        </div>
-
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
-                                <Crown className="text-purple-400" size={20} />
-                            </div>
-                            <div>
-                                <h4 className="text-lg font-bold text-white">Pro</h4>
-                                <p className="text-white/40 text-xs">1.000 créditos/mês</p>
-                            </div>
-                        </div>
-
-                        <ul className="space-y-2 mb-6 text-white/80 text-sm">
-                            <li className="flex items-center gap-2">
-                                <CheckCircle size={14} className="text-purple-400" />
-                                OneShot Fixes
-                            </li>
-                            <li className="flex items-center gap-2">
-                                <CheckCircle size={14} className="text-purple-400" />
-                                Design Lab
-                            </li>
-                            <li className="flex items-center gap-2">
-                                <CheckCircle size={14} className="text-purple-400" />
-                                Scripts Premium
-                            </li>
-                        </ul>
-
-                        <button
-                            onClick={() => onUpgrade?.('pro')}
-                            disabled={currentPlan === 'pro'}
-                            className={`w-full py-3 rounded-xl font-bold transition-all shadow-lg shadow-purple-500/20 ${currentPlan === 'pro' ? 'bg-white/5 text-white/30 cursor-not-allowed' : 'bg-gradient-to-r from-purple-500 to-purple-700 text-white'}`}
-                        >
-                            R$ 34,90/mês
-                        </button>
-                    </div>
+                    <BillingStat
+                        label="Próxima Renovação"
+                        value="Mensal"
+                        icon={<Calendar size={16} />}
+                    />
+                    <BillingStat
+                        label="Método de Pagamento"
+                        value="•••• 4242"
+                        icon={<CreditCard size={16} />}
+                    />
+                    <BillingStat
+                        label="Status"
+                        value="Ativo"
+                        icon={<CheckCircle size={16} />}
+                        highlight
+                    />
                 </div>
             </div>
         </div>
     );
 };
+
+const PlanCard = ({ title, price, credits, features, missing, isActive, onSelect, color, isPopular }) => {
+    const borderColor = isActive
+        ? color === 'purple' ? 'border-purple-500' : color === 'blue' ? 'border-blue-500' : 'border-zinc-500'
+        : 'border-white/5 group-hover:border-white/10';
+
+    const bgGradient = color === 'purple'
+        ? 'from-purple-500/10 to-transparent'
+        : color === 'blue'
+            ? 'from-blue-500/10 to-transparent'
+            : 'from-zinc-500/10 to-transparent';
+
+    return (
+        <div className={`relative group p-6 rounded-2xl border ${borderColor} bg-zinc-900/40 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1`}>
+            {isPopular && !isActive && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-blue-500 text-white text-[10px] font-bold uppercase tracking-wider rounded-full shadow-lg shadow-blue-500/20">
+                    Recomendado
+                </div>
+            )}
+
+            <div className={`absolute inset-0 bg-gradient-to-b ${bgGradient} opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl pointer-events-none`}></div>
+
+            <div className="relative z-10">
+                <div className="flex justify-between items-start mb-4">
+                    <h3 className={`text-xl font-bold ${isActive ? 'text-white' : 'text-zinc-300'}`}>{title}</h3>
+                    {isActive && <div className="p-1 rounded-full bg-green-500/20 text-green-400"><Check size={14} /></div>}
+                </div>
+
+                <div className="flex items-baseline gap-1 mb-1">
+                    <span className="text-3xl font-bold text-white">R$ {price}</span>
+                    <span className="text-sm text-zinc-500">/mês</span>
+                </div>
+                <p className="text-zinc-400 text-sm mb-6">{credits} créditos mensais</p>
+
+                <button
+                    onClick={onSelect}
+                    disabled={isActive}
+                    className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-all mb-8 ${isActive
+                            ? 'bg-white/5 text-zinc-500 cursor-default'
+                            : 'bg-white text-black hover:bg-zinc-200'
+                        }`}
+                >
+                    {isActive ? 'Plano Atual' : 'Selecionar Plano'}
+                </button>
+
+                <div className="space-y-3">
+                    {features.map((feature, i) => (
+                        <div key={i} className="flex items-center gap-3 text-sm text-zinc-300">
+                            <Check size={14} className={color === 'purple' ? 'text-purple-400' : color === 'blue' ? 'text-blue-400' : 'text-zinc-400'} />
+                            {feature}
+                        </div>
+                    ))}
+                    {missing.map((feature, i) => (
+                        <div key={i} className="flex items-center gap-3 text-sm text-zinc-600">
+                            <X size={14} />
+                            {feature}
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const BillingStat = ({ label, value, icon, highlight }) => (
+    <div className="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/[0.02]">
+        <div className="flex items-center gap-3 text-zinc-400">
+            {icon}
+            <span className="text-sm font-medium">{label}</span>
+        </div>
+        <span className={`font-mono font-semibold ${highlight ? 'text-green-400' : 'text-white'}`}>
+            {value}
+        </span>
+    </div>
+);
 
 export default SubscriptionView;

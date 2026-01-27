@@ -31,3 +31,9 @@
 body {
   @apply bg-[#0a0a0f] text-white antialiased;
 }
+
+@keyframes shine {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}

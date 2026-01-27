@@ -285,7 +285,7 @@ const DashboardPage = () => {
       description: 'Automatize tarefas complexas com nossa biblioteca de scripts verificados.',
       icon: 'code',
       color: 'emerald',
-      available: false
+      available: true
     }
   ]);
   const [loading, setLoading] = useState(false);
@@ -302,7 +302,7 @@ const DashboardPage = () => {
         if (metricsRes.data) setMetrics(metricsRes.data);
         if (userRes.data) setUser(userRes.data);
         if (toolsRes.data) {
-          setTools(toolsRes.data);
+          setTools(toolsRes.data.map(tool => tool.name === 'Scripts Premium' ? { ...tool, available: true } : tool));
         }
       } catch (e) {
         // Only show "backend not available" if it's a network error, not a 429/500/etc
@@ -320,10 +320,13 @@ const DashboardPage = () => {
   }, []);
 
   const handleOpenTool = (toolId) => {
-    if (toolId === 'tool-1') {
+    const tool = tools.find(t => t.id === toolId);
+    if (toolId === 'tool-1' || tool?.name === 'One Shot Fixes') {
       navigate('/correcoes');
-    } else if (toolId === 'tool-2') {
+    } else if (toolId === 'tool-2' || tool?.name === 'Laboratório de Design') {
       navigate('/design-lab');
+    } else if (toolId === 'tool-3' || tool?.name === 'Scripts Premium') {
+      navigate('/scripts');
     }
   };
 

@@ -5,7 +5,7 @@ export const AiLoader = ({ size = 180, text = "Generating" }) => {
     const letters = text.split("");
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-b from-[#1a3379] via-[#0f172a] to-black">
+        <div className="flex items-center justify-center w-full h-full bg-gradient-to-b from-[#1a3379] via-[#0f172a] to-black">
             <div
                 className="relative flex items-center justify-center font-inter select-none"
                 style={{ width: size, height: size }}

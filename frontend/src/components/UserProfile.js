@@ -1,22 +1,32 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
 import {
   User,
   CreditCard,
   Coins,
   Settings,
-  ChevronRight,
   LogOut,
   ArrowLeft
 } from 'lucide-react';
 import ProfileView from './profile/ProfileView';
 import SubscriptionView from './profile/SubscriptionView';
 import CreditsView from './profile/CreditsView';
+import { AnimeNavBar } from './ui/anime-navbar';
 
 // API Config is handled in lib/api.js
 
 const UserProfile = ({ user: initialUser, onBack, onLogout }) => {
+  const [searchParams] = useSearchParams();
   const [activeView, setActiveView] = useState('Perfil');
+
+  // Sync active view with query params
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab === 'assinatura') setActiveView('Assinatura');
+    else if (tab === 'creditos') setActiveView('Créditos');
+    else if (tab === 'perfil') setActiveView('Perfil');
+  }, [searchParams]);
   const [user, setUser] = useState(initialUser || {});
   const [credits, setCredits] = useState({
     plan: 'starter',
@@ -27,6 +37,25 @@ const UserProfile = ({ user: initialUser, onBack, onLogout }) => {
   });
   const [usageHistory, setUsageHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Define Navbar Items
+  const navItems = [
+    { name: 'Voltar', icon: ArrowLeft, url: '#' },
+    { name: 'Perfil', icon: User, url: '#' },
+    { name: 'Assinatura', icon: CreditCard, url: '#' },
+    { name: 'Créditos', icon: Coins, url: '#' },
+    { name: 'Sair', icon: LogOut, url: '#' },
+  ];
+
+  const handleNavChange = (tab) => {
+    if (tab === 'Voltar') {
+      if (onBack) onBack();
+    } else if (tab === 'Sair') {
+      if (onLogout) onLogout();
+    } else {
+      setActiveView(tab);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -73,74 +102,22 @@ const UserProfile = ({ user: initialUser, onBack, onLogout }) => {
   };
 
   return (
-    <div className="flex h-screen w-full bg-[#0a0a0c] overflow-hidden">
-      {/* Sidebar */}
-      <aside className="w-64 flex flex-col border-r border-white/5 bg-[#0d0d0f] z-10 hidden md:flex">
-        <div className="p-8">
-          <button
-            onClick={onBack}
-            className="flex items-center gap-2 text-white/50 hover:text-white transition-colors mb-6"
-          >
-            <ArrowLeft size={20} />
-            <span>Voltar</span>
-          </button>
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center font-bold text-xl text-white">
-            {user?.name ? user.name.charAt(0).toUpperCase() : 'R'}
-          </div>
-        </div>
+    <div className="bg-[#0a0a0c] min-h-screen relative">
+      {/* Floating Navbar */}
+      <AnimeNavBar
+        items={navItems}
+        active={activeView}
+        onTabChange={handleNavChange}
+      />
 
-        <nav className="flex-1 px-4 space-y-2">
-          <NavItem
-            icon={<User size={20} />}
-            label="Perfil"
-            active={activeView === 'Perfil'}
-            onClick={() => setActiveView('Perfil')}
-          />
-          <NavItem
-            icon={<CreditCard size={20} />}
-            label="Assinatura"
-            active={activeView === 'Assinatura'}
-            onClick={() => setActiveView('Assinatura')}
-          />
-          <NavItem
-            icon={<Coins size={20} />}
-            label="Créditos"
-            active={activeView === 'Créditos'}
-            onClick={() => setActiveView('Créditos')}
-          />
-        </nav>
-
-        <div className="p-4 border-t border-white/5 space-y-2">
-          <button
-            onClick={onLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 text-red-400/80 hover:text-red-400 hover:bg-white/5 rounded-xl transition-all"
-          >
-            <LogOut size={20} />
-            <span className="font-medium">Sair da Conta</span>
-          </button>
-        </div>
-      </aside>
+      {/* Decorative background blobs */}
+      <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/10 blur-[120px] rounded-full point-events-none z-0"></div>
+      <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[30%] bg-blue-600/10 blur-[100px] rounded-full point-events-none z-0"></div>
 
       {/* Main Content */}
-      <main className="flex-1 relative overflow-y-auto bg-gradient-to-br from-[#0a0a0c] via-[#110d18] to-[#0a0a0c]">
-        {/* Decorative background blobs */}
-        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/10 blur-[120px] rounded-full point-events-none"></div>
-        <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[30%] bg-blue-600/10 blur-[100px] rounded-full point-events-none"></div>
-
-        {/* Mobile Header (Back + Menu) */}
-        <div className="md:hidden flex justify-between items-center p-6 border-b border-white/5 relative z-20">
-          <button onClick={onBack} className="p-2 text-white/60">
-            <ArrowLeft size={24} />
-          </button>
-          <div className="flex gap-4">
-            <button onClick={() => setActiveView('Perfil')} className={`p-2 ${activeView === 'Perfil' ? 'text-purple-400' : 'text-white/40'}`}><User size={24} /></button>
-            <button onClick={() => setActiveView('Assinatura')} className={`p-2 ${activeView === 'Assinatura' ? 'text-purple-400' : 'text-white/40'}`}><CreditCard size={24} /></button>
-            <button onClick={() => setActiveView('Créditos')} className={`p-2 ${activeView === 'Créditos' ? 'text-purple-400' : 'text-white/40'}`}><Coins size={24} /></button>
-          </div>
-        </div>
-
-        {/* Top Header */}
-        <header className="hidden md:flex justify-between items-center px-12 py-8 relative z-10 text-white">
+      <main className="max-w-7xl mx-auto px-4 md:px-12 pt-28 pb-24 relative z-10">
+        {/* Context Header */}
+        <header className="flex justify-between items-center mb-8 text-white">
           <h1 className="text-2xl font-bold tracking-tight">
             {activeView === 'Créditos' ? 'Dashboard de Uso Avançado' : activeView}
           </h1>
@@ -149,35 +126,16 @@ const UserProfile = ({ user: initialUser, onBack, onLogout }) => {
           </button>
         </header>
 
-        {/* Content Area */}
-        <div className="px-4 md:px-12 pb-12 relative z-10 pt-6 md:pt-0">
-          {loading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          ) : (
-            renderView()
-          )}
-        </div>
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : (
+          renderView()
+        )}
       </main>
     </div>
   );
 };
-
-const NavItem = ({ icon, label, active, onClick }) => (
-  <button
-    onClick={onClick}
-    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all group ${active
-      ? 'bg-purple-600/20 text-purple-400 border-l-4 border-purple-500 rounded-l-none'
-      : 'text-white/50 hover:text-white hover:bg-white/5'
-      }`}
-  >
-    <div className="flex items-center gap-3">
-      <span className={active ? 'text-purple-400' : 'text-inherit'}>{icon}</span>
-      <span className="font-medium">{label}</span>
-    </div>
-    {active && <ChevronRight size={16} />}
-  </button>
-);
 
 export default UserProfile;
