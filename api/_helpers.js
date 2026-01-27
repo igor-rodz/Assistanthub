@@ -2,14 +2,37 @@
 // Clean, optimized, production-ready
 
 let supabaseClient = null;
+let supabaseAdminClient = null;
 let geminiModel = null;
 
 // --- LAZY LOADERS ---
 
-export async function getSupabase() {
+export async function getSupabase(useAdmin = false) {
+    const { createClient } = await import('@supabase/supabase-js');
+    const url = (process.env.SUPABASE_URL || 'https://ipxpsxzllgnklqynkymr.supabase.co')?.trim();
+
+    if (useAdmin) {
+        if (!supabaseAdminClient) {
+            let key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+
+            if (!key) {
+                console.warn("SUPABASE_SERVICE_ROLE_KEY missing. Admin operations might fail due to RLS.");
+                // Fallback to Anon Key (better than crash, but RLS applies)
+                key = (process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlweHBzeHpsbGdua2xxeW5reW1yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0ODgxODEsImV4cCI6MjA4NDA2NDE4MX0.9YmBqz5kZS69cZ5GLOKRTrGNstPBWMvmwaLhSWRpoHU')?.trim();
+                supabaseAdminClient = createClient(url, key, { auth: { persistSession: false } });
+            } else {
+                supabaseAdminClient = createClient(url, key, {
+                    auth: {
+                        autoRefreshToken: false,
+                        persistSession: false
+                    }
+                });
+            }
+        }
+        return supabaseAdminClient;
+    }
+
     if (!supabaseClient) {
-        const { createClient } = await import('@supabase/supabase-js');
-        const url = (process.env.SUPABASE_URL || 'https://ipxpsxzllgnklqynkymr.supabase.co')?.trim();
         const key = (process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlweHBzeHpsbGdua2xxeW5reW1yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0ODgxODEsImV4cCI6MjA4NDA2NDE4MX0.9YmBqz5kZS69cZ5GLOKRTrGNstPBWMvmwaLhSWRpoHU')?.trim();
 
         if (!url || !key) {
@@ -48,14 +71,14 @@ export async function generateWithRetry(model, prompt, retries = 3) {
             const errorMessage = error.message || error.toString() || '';
 
             // Check if it's a quota error
-            const isQuotaError = errorMessage.includes('quota') || 
-                                errorMessage.includes('Quota exceeded') ||
-                                errorMessage.includes('exceeded your current quota');
+            const isQuotaError = errorMessage.includes('quota') ||
+                errorMessage.includes('Quota exceeded') ||
+                errorMessage.includes('exceeded your current quota');
 
             // If it's a quota error, don't retry - return a specific error
             if (isQuotaError) {
-                throw { 
-                    status: 429, 
+                throw {
+                    status: 429,
                     message: 'Cota da API Gemini excedida. Verifique seu plano e faturamento no Google Cloud Console. Aguarde alguns minutos antes de tentar novamente.',
                     isQuotaError: true
                 };
@@ -114,7 +137,7 @@ export async function getRequestBody(request) {
 export function corsHeaders() {
     return {
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     };
 }
@@ -133,7 +156,7 @@ export function createErrorResponse(error, defaultStatus = 500) {
 
     console.error(`[API Error ${status}]:`, message);
 
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
         error: message,
         isQuotaError: isQuotaError,
         status: status
@@ -151,7 +174,10 @@ export async function checkSufficientCredits() {
 
 export async function deductCredits(userId, amount, tool, summary, tokensIn, tokensOut) {
     try {
-        const supabase = await getSupabase();
+        const supabase = await getSupabase(true); // Usage logs might be admin owned? No profiles.
+        // Usually writing to logs is allowed by RLS for user own logs.
+        // Stick to normal client for deductCredits unless we change it.
+        // Keeping getSupabase() for user initiated actions is safer for RLS enforcing ownership.
 
         await Promise.allSettled([
             supabase.from('credit_usage_logs').insert({

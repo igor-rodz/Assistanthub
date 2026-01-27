@@ -94,8 +94,8 @@ const DesignLab = () => {
         setGeneratingMessages(['Aplicando refinamentos...']);
 
         try {
-            const response = await axios.post(
-                `${API}/design-lab/refine?job_id=${currentJob.job_id}&refinement=${encodeURIComponent(refinement)}`
+            const response = await api.post(
+                `/design-lab/refine?job_id=${currentJob.job_id}&refinement=${encodeURIComponent(refinement)}`
             );
             setCurrentJob(response.data);
             setState('preview');
@@ -122,25 +122,18 @@ const DesignLab = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#0a0a0c] text-white">
-            {/* Header */}
-            <header className="flex items-center gap-4 p-4 border-b border-white/5">
-                <button
-                    onClick={handleBack}
-                    className="p-2 hover:bg-white/5 rounded-lg transition-colors"
-                >
-                    <ArrowLeft size={20} />
-                </button>
-                <h1 className="text-xl font-bold">Design Lab AI</h1>
-                {currentJob && (
-                    <span className="ml-auto text-sm text-white/50">
-                        Créditos usados: {currentJob.credits_used?.toFixed(2)}
-                    </span>
-                )}
-            </header>
+        <div className="min-h-screen text-white relative">
+            {/* Subtle Floating Back Button */}
+            <button
+                onClick={handleBack}
+                className="absolute top-6 left-6 z-50 p-2.5 bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full transition-all text-white/40 hover:text-white border border-white/5 shadow-lg group"
+                title="Voltar"
+            >
+                <ArrowLeft size={18} className="group-hover:-translate-x-0.5 transition-transform" />
+            </button>
 
             {/* Content based on state */}
-            <div className="h-[calc(100vh-65px)]">
+            <div className="h-screen w-full">
                 {state === 'idle' && (
                     <DesignLabPromptInput
                         onSubmit={handleSubmit}

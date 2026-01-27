@@ -12,6 +12,10 @@ import metrics from './dashboard/metrics.js';
 import tools from './dashboard/tools.js';
 import user from './dashboard/user.js';
 import create from './design-lab/create.js';
+import adminUsers from './admin/users.js';
+import adminDashboardStats from './admin/dashboard/stats.js';
+import adminCreditsTransactions from './admin/credits/transactions.js';
+import adminUsageLogs from './admin/usage-logs.js';
 
 const app = express();
 const PORT = 8000;
@@ -23,7 +27,7 @@ app.use(express.json());
 const adapt = (handler) => async (req, res) => {
     try {
         const url = `http://${req.headers.host}${req.url}`;
-        
+
         // Construct standard Headers
         const headers = new Headers();
         Object.entries(req.headers).forEach(([key, value]) => {
@@ -41,11 +45,11 @@ const adapt = (handler) => async (req, res) => {
         });
 
         const response = await handler(webReq);
-        
+
         // Convert Response to Express
         response.headers.forEach((val, key) => res.setHeader(key, val));
         res.status(response.status);
-        
+
         const text = await response.text();
         try {
             // Try parsing as JSON to send proper json response (Express handles content-type usually but let's be safe)
@@ -70,6 +74,12 @@ app.all('/api/analyze-error', adapt(analyzeError));
 app.all('/api/dashboard/metrics', adapt(metrics));
 app.all('/api/dashboard/tools', adapt(tools));
 app.all('/api/dashboard/user', adapt(user));
+
+// Admin
+app.all('/api/admin/users', adapt(adminUsers));
+app.all('/api/admin/dashboard/stats', adapt(adminDashboardStats));
+app.all('/api/admin/credits/transactions', adapt(adminCreditsTransactions));
+app.all('/api/admin/usage-logs', adapt(adminUsageLogs));
 
 // Design Lab
 app.all('/api/design-lab/create', adapt(create));

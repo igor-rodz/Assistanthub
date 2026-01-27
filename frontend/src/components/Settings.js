@@ -24,6 +24,8 @@ const Settings = ({ onBack }) => {
     });
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [activeModal, setActiveModal] = useState(null);
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     const tabs = [

@@ -6,7 +6,8 @@ import {
     LogOut,
     User,
     HelpCircle,
-    Link as LinkIcon
+    Link as LinkIcon,
+    Settings
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -72,6 +73,7 @@ export const UserMenu = ({ user, credits, onLogout }) => {
                         {/* Menu Items */}
                         <div className="p-1 space-y-0.5">
                             <NavItem icon={User} label="Conta" to="/perfil?tab=perfil" />
+                            <NavItem icon={Settings} label="Configurações" to="/settings" />
                             <button
                                 onClick={onLogout}
                                 className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-red-500/10 text-red-500 transition-colors text-xs font-medium"

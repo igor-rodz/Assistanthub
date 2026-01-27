@@ -63,21 +63,21 @@ const ErrorLogInput = ({ onGenerate, onBack, user, onOpenProfile, error }) => {
       </header>
 
       {/* Main Content */}
-      <main className="relative z-10 max-w-4xl mx-auto px-6 py-8">
+      <main className="relative z-10 max-w-4xl mx-auto px-6 py-2">
         {/* Hero Title */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
+        <div className="text-center mb-6">
+          <h1 className="text-3xl md:text-4xl font-bold mb-2">
             <span className="bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent">
               One-Shot Fixes
             </span>
           </h1>
-          <p className="text-white/60 text-lg max-w-2xl mx-auto">
-            Cole seus logs de erro complexos abaixo para gerar prompts de correção simplificados e educativos instantaneamente.
+          <p className="text-white/60 text-sm md:text-base max-w-2xl mx-auto">
+            Cole seus logs de erro complexos abaixo para gerar prompts de correção simplificados.
           </p>
         </div>
 
         {/* Error Log Input Card */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden mb-8">
+        <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden mb-4">
           {/* Input Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
             <div className="flex items-center gap-2">
@@ -101,7 +101,7 @@ const ErrorLogInput = ({ onGenerate, onBack, user, onOpenProfile, error }) => {
 ReferenceError: window is not defined
     at Page (./app/page.tsx:12:3)
 ...`}
-            className="w-full h-64 bg-transparent text-white/90 font-mono text-sm p-4 resize-none focus:outline-none placeholder:text-white/30"
+            className="w-full h-48 bg-transparent text-white/90 font-mono text-sm p-4 resize-none focus:outline-none placeholder:text-white/30"
           />
 
           {/* Input Footer */}
@@ -115,7 +115,7 @@ ReferenceError: window is not defined
         </div>
 
         {/* Quick Context Tags */}
-        <div className="mb-8">
+        <div className="mb-6">
           <p className="text-white/50 text-xs uppercase tracking-wider mb-3">TAGS DE CONTEXTO RÁPIDO</p>
           <div className="flex flex-wrap gap-2">
             {tags.map((tag) => {

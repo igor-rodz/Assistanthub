@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import api from '../lib/api';
-import { LayoutDashboard, Settings, LogOut, Wand2, Coins, Code2 } from "lucide-react";
+import { LayoutDashboard, Settings, LogOut, Wand2, Coins, Code2, Palette } from "lucide-react";
 import { motion } from "framer-motion";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
@@ -99,19 +99,20 @@ const Layout = ({ children }) => {
             ),
         },
         {
+            label: "Design Lab",
+            href: "/design-lab",
+            icon: (
+                <Palette className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+            ),
+        },
+        {
             label: "Scripts",
             href: "/scripts",
             icon: (
                 <Code2 className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
             ),
         },
-        {
-            label: "Configurações",
-            href: "/settings",
-            icon: (
-                <Settings className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-            ),
-        },
+
 
     ];
 

@@ -1,143 +1,116 @@
 import React, { useState, useEffect } from 'react';
-import api from '../../lib/api';
-import { Users, Coins, TrendingUp, FileCode, Activity, CheckCircle } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { Users, Coins, Activity, Zap, ArrowUp, ArrowDown } from 'lucide-react';
 import { StatsCard } from './shared';
-
-// API Config is handled in lib/api.js
+// import { AdminChart } from './AdminChart'; // If exists, or we use simple stats for now.
+import api from '../../lib/api';
 
 const AdminDashboard = () => {
-    const [stats, setStats] = useState(null);
+    const [stats, setStats] = useState({
+        total_users: 0,
+        total_credits_distributed: 0,
+        total_credits_consumed: 0,
+        total_scripts: 0,
+        active_users: 0
+    });
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const response = await api.get('/admin/dashboard/stats');
+                setStats(response.data);
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
         fetchStats();
     }, []);
 
-    const fetchStats = async () => {
-        try {
-            const response = await api.get('/admin/dashboard/stats');
-            setStats(response.data);
-        } catch (error) {
-            console.error('Error fetching stats:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center h-64">
-                <div className="w-8 h-8 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin" />
-            </div>
-        );
-    }
-
-    if (!stats) return null;
-
-    // Data for pie chart
-    const planData = [
-        { name: 'Starter', value: stats.users_by_plan.starter, color: '#3b82f6' },
-        { name: 'Builder', value: stats.users_by_plan.builder, color: '#8b5cf6' },
-        { name: 'Pro', value: stats.users_by_plan.pro, color: '#f59e0b' }
-    ];
+    // Calculate trends or percentages if historical data available (mocked for now in UI presentation)
+    const usageRate = stats.total_credits_distributed > 0
+        ? ((stats.total_credits_consumed / stats.total_credits_distributed) * 100).toFixed(1)
+        : 0;
 
     return (
         <div className="space-y-6">
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="flex items-center justify-between">
+                <div>
+                    <h2 className="text-2xl font-bold text-white">Dashboard Overview</h2>
+                    <p className="text-white/50 text-sm mt-1">Visão geral do sistema em tempo real</p>
+                </div>
+                <div className="flex gap-2">
+                    <span className="px-3 py-1 bg-green-500/10 text-green-400 text-xs rounded-full border border-green-500/20 flex items-center gap-1">
+                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                        Online
+                    </span>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatsCard
                     title="Total de Usuários"
-                    value={stats.total_users}
+                    value={stats.total_users || 0}
                     icon={Users}
-                    color="orange"
-                    trend="up"
-                    trendValue="+12%"
-                    subtitle={`${stats.active_users} ativos`}
-                />
-                <StatsCard
-                    title="Créditos Distribuídos"
-                    value={stats.total_credits_distributed.toLocaleString()}
-                    icon={Coins}
-                    color="green"
-                    subtitle="Total no sistema"
-                />
-                <StatsCard
-                    title="Créditos Consumidos"
-                    value={stats.total_credits_consumed.toFixed(0)}
-                    icon={TrendingUp}
                     color="blue"
                     trend="up"
-                    trendValue="+8%"
+                    trendValue={`+${stats.active_users} ativos`}
+                    subtitle="Base de usuários"
                 />
+
                 <StatsCard
-                    title="Scripts Disponíveis"
-                    value={stats.total_scripts}
-                    icon={FileCode}
+                    title="Créditos Distribuídos"
+                    value={(stats.total_credits_distributed || 0).toFixed(0)}
+                    icon={Coins}
+                    color="orange"
+                    trend="up"
+                    trendValue="Total lifetime"
+                    subtitle="Emitidos"
+                />
+
+                <StatsCard
+                    title="Créditos Consumidos"
+                    value={(stats.total_credits_consumed || 0).toFixed(0)}
+                    icon={Zap}
                     color="purple"
+                    trend="neutral"
+                    trendValue={`${usageRate}% taxa`}
+                    subtitle="Utilizados"
+                />
+
+                <StatsCard
+                    title="Scripts Gerados"
+                    value={stats.total_analyses || 0} // Using "analyses" as "scripts/usage" proxy
+                    icon={Activity}
+                    color="green"
+                    trend="up"
+                    trendValue="Total logs"
+                    subtitle="Atividade"
                 />
             </div>
 
-            {/* Charts Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Users by Plan */}
-                <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-6">
-                    <h3 className="text-lg font-bold text-white mb-4">Usuários por Plano</h3>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <PieChart>
-                            <Pie
-                                data={planData}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={60}
-                                outerRadius={100}
-                                paddingAngle={5}
-                                dataKey="value"
-                            >
-                                {planData.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={entry.color} />
-                                ))}
-                            </Pie>
-                            <Tooltip
-                                contentStyle={{
-                                    backgroundColor: '#0d0d0f',
-                                    border: '1px solid rgba(255,255,255,0.1)',
-                                    borderRadius: '8px'
-                                }}
-                            />
-                            <Legend />
-                        </PieChart>
-                    </ResponsiveContainer>
+            {/* Placeholder for future charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4">
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-6 min-h-[300px] flex items-center justify-center text-white/30">
+                    <p>Gráfico de Atividade de Usuários (Em breve)</p>
                 </div>
-
-                {/* Activity Stats */}
-                <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-6">
-                    <h3 className="text-lg font-bold text-white mb-4">Atividade do Sistema</h3>
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                                    <Activity size={20} className="text-blue-400" />
-                                </div>
-                                <div>
-                                    <p className="text-sm text-white/50">OneShot Fixes</p>
-                                    <p className="text-xl font-bold text-white">{stats.total_analyses}</p>
-                                </div>
-                            </div>
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-6 min-h-[300px] flex items-center justify-center text-white/30">
+                    <p>Distribuição de Planos (Em breve)</p>
+                    {/* We could use stats.users_by_plan here simply */}
+                    {stats.users_by_plan && (
+                        <div className="w-full pl-8">
+                            <ul className="space-y-2">
+                                {Object.entries(stats.users_by_plan).map(([plan, count]) => (
+                                    <li key={plan} className="flex justify-between max-w-[200px]">
+                                        <span className="capitalize">{plan || 'Free'}:</span>
+                                        <span className="font-bold text-white">{count}</span>
+                                    </li>
+                                ))}
+                            </ul>
                         </div>
-
-                        <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
-                                    <CheckCircle size={20} className="text-purple-400" />
-                                </div>
-                                <div>
-                                    <p className="text-sm text-white/50">Design Jobs</p>
-                                    <p className="text-xl font-bold text-white">{stats.total_designs}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    )}
                 </div>
             </div>
         </div>
