@@ -2,14 +2,15 @@ import {
     getGeminiModel,
     getSupabase,
     deductCredits,
-    uuidv4,
     corsHeaders
 } from '../_helpers.js';
+import { getSystemPrompt } from './_knowledge.js';
 
 export const config = {
-    // Max duration for Pro plan is higher, but for Hobby 10s is limit without streaming.
-    // Streaming bypasses this limit effectively for the connection, but execution time matters.
-    // We keep it strictly streaming to avoid timeouts.
+    // Aumentando timeout para suportar o processo de pensamento longo e geração de código complexo
+    // Vercel Serverless Functions têm limites (10s Hobby, 60s Pro). 
+    // O stream ajuda a manter a conexão, mas a execução total tem limite.
+    // Se o usuário estiver self-hosted ou edge, isso é flexível.
     maxDuration: 60
 };
 
@@ -24,100 +25,105 @@ export default async function handler(req, res) {
     });
 
     try {
-        // 1. Auth & Input Validation
+        // --- 1. Security & Auth ---
         const token = req.headers.authorization?.split(' ')[1];
-        if (!token) throw { status: 401, message: "Unauthorized" };
+        if (!token) throw { status: 401, message: "Unauthorized: Missing Token" };
 
         const supabase = await getSupabase();
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-        if (authError || !user) throw { status: 401, message: "Invalid token" };
+        if (authError || !user) throw { status: 401, message: "Unauthorized: Invalid Token" };
 
         const { prompt, design_type = "landing_page", fidelity = "high" } = req.body;
         if (!prompt) throw { status: 400, message: "Prompt is required" };
 
-        // 2. Setup Streaming Headers
+        // --- 2. Stream Setup ---
         res.setHeader('Content-Type', 'text/event-stream');
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
-        // Prevent buffering
-        res.setHeader('X-Accel-Buffering', 'no');
+        res.setHeader('X-Accel-Buffering', 'no'); // Crucial for Nginx/Proxies
 
-        // 3. Initialize Gemini with HIGH Token Limit
+        // --- 3. AI Agent Initialization ---
+        // Usando Gemini 2.0 Flash Experimental para melhor raciocínio e velocidade
         const { GoogleGenerativeAI } = await import('@google/generative-ai');
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+        // Mapeamento dinâmico do modelo - Flash é rápido e bom para código
         const model = genAI.getGenerativeModel({
-            model: "gemini-2.0-flash-exp", // Experimental model usually has better reasoning
+            model: "gemini-2.0-flash-exp",
             generationConfig: {
-                temperature: 0.7,
-                maxOutputTokens: 8192, // Increased limit for full pages
+                temperature: 0.7, // Criatividade controlada
+                maxOutputTokens: 8192, // Alto limite para output de HTML completo
+                topP: 0.95,
+                topK: 64,
             }
         });
 
-        // 4. The "Real Agent" System Prompt
-        // We instruct the model to think out loud and emit events before code.
-        const systemPrompt = `
-You are a professional UI designer and Frontend Developer.
-Your task is to generate a high-quality, professional website based on the user's request: "${prompt}".
+        // --- 4. Context Injection ---
+        // Construímos o prompt "Mestre" com todas as skills injetadas
+        const fullPrompt = getSystemPrompt(prompt);
 
-# INSTRUCTIONS
-1. **Design**: Use Tailwind CSS for styling. Create a modern, clean, and responsive design.
-2. **Icons**: YOU MUST USE FontAwesome CDN for icons: <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />. Use <i class="fa-solid fa-check"></i> syntax.
-3. **Images**: YOU MUST USE LoremFlickr for placeholder images: https://loremflickr.com/800/600/keyword.
-4. **Structure**: Write semantic HTML5 (header, section, footer).
-5. **Output**: Output ONLY the complete HTML code. Do not include markdown code blocks (\`\`\`html) or explanations inside the final code stream.
+        console.log(`[DesignLab] Iniciando Job: ${prompt.substring(0, 50)}...`);
 
-:::CODE_START:::
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generated Design</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-</head>
-<body class="font-sans antialiased text-gray-900 bg-white">
-`;
+        // --- 5. Execution ---
+        const result = await model.generateContentStream(fullPrompt);
 
-        const result = await model.generateContentStream(systemPrompt);
-
-        // 5. Stream Pipe
         let accumulatedCode = '';
         let insideCodeBlock = false;
+        let responseTokens = 0;
 
         for await (const chunk of result.stream) {
             const chunkText = chunk.text();
+            responseTokens += Math.ceil(chunkText.length / 4); // Estimativa grosseira
 
-            // Simple pass-through of the agent's raw stream
-            // The frontend will parse the :::PREFIX::: tags
+            // Pass-through direto para o frontend que já sabe fazer parse das tags :::TAG:::
             res.write(chunkText);
 
-            // Accumulate code for DB saving later (naive logic)
+            // Coleta código para logs
             if (chunkText.includes(':::CODE_START:::')) insideCodeBlock = true;
             if (chunkText.includes(':::CODE_END:::')) insideCodeBlock = false;
-            if (insideCodeBlock) accumulatedCode += chunkText.replace(':::CODE_START:::', '');
-        }
 
-        // 6. DB Saving (Fire and forget, best effort)
-        try {
-            // We try to extract the HTML roughly from the accumulated text
-            // Ideally we'd parse it better, but for logging history this acts as backup.
-            if (accumulatedCode.length > 50) {
-                const tokensIn = Math.ceil(systemPrompt.length / 4);
-                const tokensOut = Math.ceil(accumulatedCode.length / 4);
+            // Tratamento mais robusto para capturar todo o código, mesmo se o marker quebrar no chunk
+            if (insideCodeBlock || chunkText.includes('<!DOCTYPE html>')) {
+                // Remove markers se vierem no mesmo chunk
+                let clearChunk = chunkText
+                    .replace(':::CODE_START:::', '')
+                    .replace(':::CODE_END:::', '')
+                    .replace('```html', '') // Fallback caso o modelo alucine markdown
+                    .replace('```', '');
 
-                // Deduct credits
-                await deductCredits(user.id, 0.5, 'design_job_v2', `Design: ${prompt.substring(0, 20)}`, tokensIn, tokensOut);
+                accumulatedCode += clearChunk;
             }
-        } catch (dbErr) {
-            console.error('DB Log Error:', dbErr);
         }
 
+        // --- 6. Logging & Billing (Post-Process) ---
+        // Fire-and-forget para não travar a response
+        (async () => {
+            try {
+                if (accumulatedCode.length > 50) {
+                    await deductCredits(
+                        user.id,
+                        2, // Custo maior pois é um agente "Premium" (Bolt-like)
+                        'design_lab_v2',
+                        `Design Agent: ${prompt.substring(0, 30)}`,
+                        Math.ceil(fullPrompt.length / 4),
+                        responseTokens
+                    );
+
+                    // TODO: Salvar o artefato gerado no Supabase Storage ou Table para histórico
+                    // Por enquanto só deduzimos crédito e logamos
+                    console.log(`[DesignLab] Job Finalizado. Tokens gerados: ~${responseTokens}`);
+                }
+            } catch (err) {
+                console.error('[DesignLab] Erro no log pós-request:', err);
+            }
+        })();
+
+        res.write('\n\n:::DONE:::\n'); // Sinal explícito de fim
         res.end();
 
     } catch (error) {
-        console.error("Agent Error:", error);
-        res.write(`\n:::ERROR::: ${error.message || "Internal Error"}\n`);
+        console.error("[DesignLab] Fatal Error:", error);
+        res.write(`\n:::ERROR::: ${error.message || "Erro interno no agente de design"}\n`);
         res.end();
     }
 }

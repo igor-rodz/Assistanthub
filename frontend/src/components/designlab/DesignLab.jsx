@@ -91,46 +91,61 @@ const DesignLab = () => {
                 // --- PARSER LOGIC ---
                 // We parse line by line to extract events
                 const lines = buffer.split('\n');
-                // Keep the last partial line in buffer
-                buffer = lines.pop();
+                buffer = lines.pop(); // Keep partial line
 
                 let stateHasChanged = false;
 
                 for (const line of lines) {
-                    if (line.includes(':::LOG:::')) {
-                        const logMsg = line.split(':::LOG:::')[1].trim();
-                        capturedLogs.push(logMsg);
+                    // Ignora linhas vazias
+                    if (!line.trim()) continue;
+
+                    if (line.includes(':::PLAN:::')) {
+                        capturedLogs.push('🧠 Analisando requisitos e planejando arquitetura...');
                         stateHasChanged = true;
                     }
-                    else if (line.includes(':::PLAN:::')) {
-                        const planMsg = line.split(':::PLAN:::')[1].trim();
-                        capturedLogs.push(`📋 Plano: ${planMsg}`);
+                    else if (line.includes(':::DESIGN:::')) {
+                        capturedLogs.push('🎨 Definindo sistema de design (Cores, Tipografia, Tokens)...');
                         stateHasChanged = true;
                     }
                     else if (line.includes(':::CODE_START:::')) {
                         isInsideCode = true;
-                        capturedLogs.push('💻 Escrevendo código...');
+                        capturedLogs.push('👨‍💻 Escrevendo código e aplicando estilos...');
                         stateHasChanged = true;
                     }
                     else if (line.includes(':::CODE_END:::')) {
                         isInsideCode = false;
+                        capturedLogs.push('✨ Código gerado. Finalizando...');
+                        stateHasChanged = true;
+                    }
+                    else if (line.includes(':::REVIEW:::')) {
+                        capturedLogs.push('🕵️ Auto-revisão: Verificando acessibilidade e responsividade...');
+                        stateHasChanged = true;
+                    }
+                    else if (line.includes(':::DONE:::')) {
+                        capturedLogs.push('✅ Finalizado!');
+                        stateHasChanged = true;
                     }
                     else if (line.includes(':::ERROR:::')) {
                         const errMsg = line.split(':::ERROR:::')[1].trim();
                         throw new Error(errMsg);
                     }
                     else if (isInsideCode) {
-                        // It's actual HTML code line
+                        // É código real
                         codeBuffer += line + '\n';
                         stateHasChanged = true;
                     }
+                    // Se a linha não for um comando, pode ser "Reasoning Text" do modelo.
+                    // Opcional: mostrar o pensamento cru no console ou numa aba de debug.
+                    // else if (!isInsideCode && line.length > 5) {
+                    //    console.log('[Agent Thought]', line); 
+                    // }
                 }
 
                 if (stateHasChanged) {
                     setCurrentJob(prev => ({
                         ...prev,
-                        logs: [...prev.logs, ...capturedLogs.slice(prev.logs.length)], // Add only new logs (simple implementation)
-                        html: codeBuffer // Live code update!
+                        logs: [...capturedLogs], // Substitui todos para manter sincronia simples ou append se preferir
+                        html: codeBuffer
                     }));
                 }
             }
@@ -140,7 +155,7 @@ const DesignLab = () => {
             setCurrentJob(prev => ({
                 ...prev,
                 status: 'complete',
-                logs: [...prev.logs, '✅ Design finalizado com sucesso!']
+                logs: [...capturedLogs, '🚀 Pronto para visualização!']
             }));
 
         } catch (err) {
