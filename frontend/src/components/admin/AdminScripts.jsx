@@ -32,6 +32,9 @@ const AdminScripts = () => {
         }
     };
 
+    // Extract unique categories
+    const existingCategories = [...new Set(scripts.map(s => s.category).filter(Boolean))];
+
     const handleSave = async () => {
         try {
             if (editingScript) {
@@ -45,7 +48,8 @@ const AdminScripts = () => {
             setFormData({ title: '', description: '', category: 'Geral', script_content: '', is_active: true });
         } catch (error) {
             console.error('Error saving script:', error);
-            alert('Erro ao salvar script');
+            const msg = error.response?.data?.error || error.response?.data?.message || 'Erro desconhecido';
+            alert(`Erro ao salvar: ${msg}\n\nVerifique se você rodou o script SQL no Supabase.`);
         }
     };
 
@@ -162,11 +166,18 @@ const AdminScripts = () => {
                                     <label className="block text-sm text-white/70 mb-1">Categoria</label>
                                     <input
                                         type="text"
+                                        list="category-options"
                                         value={formData.category}
                                         onChange={e => setFormData({ ...formData, category: e.target.value })}
                                         className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:border-orange-500/50 outline-none"
-                                        placeholder="Ex: Imobiliária"
+                                        placeholder="Selecione ou digite uma nova..."
                                     />
+                                    <datalist id="category-options">
+                                        {existingCategories.map((cat, idx) => (
+                                            <option key={idx} value={cat} />
+                                        ))}
+                                        {existingCategories.length === 0 && <option value="Geral" />}
+                                    </datalist>
                                 </div>
                             </div>
 
