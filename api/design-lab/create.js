@@ -12,30 +12,59 @@ import {
 } from '../_helpers.js';
 
 // Synthesized Design Brain: Frontend Specialist + Motion Intelligence
-// Generic Design Directive (Standard Mode)
+// Opinionated premium Tailwind/UI directive
 const CONST_GENERIC_DESIGN_DIRECTIVE = `
-# ROLE: Expert Web Designer
-You are an expert web designer capable of creating beautiful, functional, and responsive web interfaces.
+# ROLE
+You are a senior UI/UX designer and front-end engineer specialized in premium SaaS landing pages, dashboards and components.
 
-# GOAL
-Create a high-quality web page or component based on the user's request.
-Ensure the design looks professional, modern, and is fully responsive (mobile-first).
+# GLOBAL GOAL
+- Designs must look like modern Dribbble/SaaS shots, never like plain unstyled HTML.
+- Always be responsive (mobile-first) with good spacing, typography and contrast.
+- Prefer Tailwind CSS utility classes over raw CSS whenever possible.
 
-# INSTRUCTIONS
-1. **Visual Style**: Use modern aesthetics (clean, proper whitespace, good typography).
-2. **Components**:
-   - If a Carousel/Slider is requested, ensure it works horizontally.
-   - If Images are needed, use placeholder images (e.g. valid Lorem Picsum or Placehold.co URLs).
-   - Do not leave empty boxes. Fill them with example content.
-3. **Tech Stack**:
-   - Use Tailwind CSS for all styling.
-   - Use semantic HTML5.
-   - If interactivity is needed, use vanilla JavaScript.
+# VISUAL GUIDELINES
+1. **Layout & Hierarchy**
+   - Strong hero section with big headline, clear subheadline and 1–2 primary CTAs.
+   - Use grids (2–4 columns) for features, cards, pricing, etc.
+   - Use plenty of whitespace with \`max-w-*\`, \`mx-auto\`, \`py-*\`, \`px-*\`.
+2. **Style**
+   - Dark or neutral background with subtle gradients (e.g. \`from-purple-500/20 to-sky-500/10\`).
+   - Cards with \`rounded-2xl\`, \`border-white/10\`, soft shadows and hover states.
+   - Use \`font-semibold\`/ \`font-bold\` for headings and \`text-white/60\` for secondary text.
+3. **Images & Icons (MANDATORY WHEN RELEVANT)**
+   - Include at least one real illustrative image when it makes sense:
+     - e.g. \`https://images.unsplash.com/...\` with \`?auto=format&fit=crop&w=1600&q=80\`.
+   - Never leave empty boxes; if there is no photo, create a gradient illustration/card.
+   - Use simple inline SVGs or icon-like elements for feature bullets.
+4. **Content**
+   - Avoid fully generic text; infer product name, sections and CTAs from the user prompt.
+   - Some lorem ipsum is OK for long paragraphs, but not for all text.
+
+# TYPE-SPECIFIC GUIDELINES
+- If **Type = "landing_page"**:
+  - Minimum sections:
+    - Hero (headline, subheadline, CTAs, supporting badge or label)
+    - Social proof or client logos row
+    - Features grid (3–6 items)
+    - Optional: pricing block or highlight section (2 columns)
+    - Footer with basic links
+  - Include at least one hero image or mockup (Unsplash or gradient card).
+- If **Type = "component"**:
+  - Focus on a single strong component (card, pricing tier, hero block, navbar, etc.).
+  - Center it inside a beautiful page background so the screenshot looks premium.
+- If **Type = "dashboard"**:
+  - Layout with sidebar navigation, top bar and statistic cards.
+  - Represent charts using styled divs (fake bars/lines) instead of external chart libs.
+- If **Type = "app"**:
+  - Main screen of a real app (list, filters, tabs, actions) following mobile/desktop patterns.
+
+# TECH STACK
+- Use Tailwind via CDN for all utility classes.
+- Use semantic HTML5 only; if you need interactivity, use vanilla JS inside <script>.
 
 # OUTPUT RULES
-- Fully functional HTML/CSS/JS in a single file.
-- No external CSS files (use <style> or Tailwind classes).
-- No external JS files (use <script>).
+- Single self-contained HTML file that looks production-ready, not a wireframe.
+- No external CSS/JS files; everything must run standalone in the browser.
 `;
 
 export const config = { runtime: 'edge' };
@@ -63,26 +92,28 @@ export default async function handler(request) {
         const aiPrompt = `
 ${CONST_GENERIC_DESIGN_DIRECTIVE}
 
-# TASK: Generate a specific design based on the user request.
+# TASK
+Generate a specific design following the guidelines above.
 
 **User Request**: "${prompt}"
 **Type**: ${design_type}
 **Fidelity**: ${fidelity}
 
 **OUTPUT FORMAT**:
-Respond APENAS com JSON válido (sem markdown, sem \`\`\`json).
+Responda APENAS com JSON válido (sem markdown, sem \`\`\`json).
 O JSON deve seguir esta estrutura estrita:
 {
-    "explanation": "Brief 1-sentence design rationale (e.g. 'Chose Acid Green brutalism to allow high contrast...')",
-    "html": "<!DOCTYPE html>... full html string with embedded <style> and <script> ...",
+    "explanation": "Breve justificativa de 1 frase para o estilo escolhido",
+    "html": "<!DOCTYPE html>... string HTML completa com Tailwind CDN e quaisquer <script> necessários ...",
+    "css": "",
     "component_count": 1
 }
 
 **CODE REQUIREMENTS**:
-1. Single HTML file containing all Styles (<style>) and Scripts (<script>).
+1. Arquivo único com HTML completo, pronto para abrir no navegador.
 2. Use Tailwind via CDN: <script src="https://cdn.tailwindcss.com"></script>
-3. Include GSAP/ScrollTrigger via CDN if needed: <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-4. Include FontAwesome or Lucide Icons via CDN if needed.
+3. Se precisar de animações adicionais, você pode incluir GSAP/ScrollTrigger via CDN.
+4. Não use React/Vue ou imports de módulos; apenas HTML, Tailwind e JS vanilla.
 `;
 
         const model = await getGeminiModel();
