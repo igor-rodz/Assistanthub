@@ -18,6 +18,7 @@ import adminCreditsTransactions from './admin/credits/transactions.js';
 import adminUsageLogs from './admin/usage-logs.js';
 import adminScripts from './admin/scripts/index.js';
 import userScripts from './scripts/index.js';
+import creditsBalance from './credits/balance.js';
 
 const app = express();
 const PORT = 8000;
@@ -86,6 +87,7 @@ app.all('/api/admin/scripts', adapt(adminScripts));
 
 // Scripts (User)
 app.all('/api/scripts', adapt(userScripts));
+app.all('/api/credits/balance', adapt(creditsBalance));
 
 // Design Lab
 app.all('/api/design-lab/create', adapt(create));
