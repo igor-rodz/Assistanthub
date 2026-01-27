@@ -12,6 +12,12 @@ const DesignLabPreview = ({ html, css, viewport = 'desktop', zoom = 100 }) => {
     };
 
     const fullHtml = useMemo(() => {
+        // Se o agente gerou um HTML completo (novo workflow React/Bolt), usamos diretamente.
+        if (html && html.trim().toLowerCase().startsWith('<!doctype html>')) {
+            return html;
+        }
+
+        // Fallback para workflow antigo ou fragmentos HTML simples
         return `
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -20,22 +26,18 @@ const DesignLabPreview = ({ html, css, viewport = 'desktop', zoom = 100 }) => {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: #0a0a0c;
             color: #fff;
             min-height: 100vh;
+            margin: 0;
         }
         ${css || ''}
     </style>
 </head>
 <body>
-    ${html || '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;color:#666;">Nenhum conteúdo gerado</div>'}
+    ${html || '<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#666;">Nenhum conteúdo gerado</div>'}
 </body>
 </html>`;
     }, [html, css]);
