@@ -3,18 +3,15 @@ import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../lib/api';
 import DesignLabPromptInput from './DesignLabPromptInput';
-// DesignLabGenerating removed as we skip this screen now
 import DesignLabWorkspace from './DesignLabWorkspace';
 
-// API Config is handled in lib/api.js
-
 /**
- * DesignLab - Main container with state machine
- * States: idle -> preview (generating is now part of preview state)
+ * DesignLab - Agent-Powered Design System
+ * Features real-time thought streaming and autonomous execution.
  */
 const DesignLab = () => {
     const navigate = useNavigate();
-    const [state, setState] = useState('idle'); // idle, preview, error
+    const [state, setState] = useState('idle');
     const [prompt, setPrompt] = useState('');
     const [designType, setDesignType] = useState('component');
     const [fidelity, setFidelity] = useState('high');
@@ -26,49 +23,40 @@ const DesignLab = () => {
         setDesignType(type || designType);
         setFidelity(fid || fidelity);
 
-        // 1. Immediate Navigation to Workspace (Dynamic Feel)
-        // We create a temporary job object to show the UI immediately
-        const tempJobId = 'temp-' + Date.now();
+        // 1. Initialize Agent State
+        const tempJobId = 'job-' + Date.now();
         setCurrentJob({
             job_id: tempJobId,
-            status: 'generating', // Important: Workspace detects this to show loaders/logs
+            status: 'generating',
             html: '',
             css: '',
-            explanation: 'Iniciando agente de design...',
-            logs: ['Conectando ao cérebro de design...']
+            explanation: '',
+            logs: ['Conectando ao agente de design...']
         });
         setState('preview');
         setError(null);
 
-        // 2. Start Streaming Process in Background
+        // 2. Start Agent Stream
         try {
-            console.log('[DesignLab] Iniciando Agente:', submittedPrompt);
+            console.log('[DesignLab] Ativando Agente:', submittedPrompt);
 
-            // Auth Token Retrieval (Robust)
+            // Auth Token
             let token = null;
+            // Robust token finding logic
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
                 if (key.startsWith('sb-') && key.endsWith('-auth-token')) {
                     try {
-                        const sessionData = JSON.parse(localStorage.getItem(key));
-                        token = sessionData?.access_token;
+                        token = JSON.parse(localStorage.getItem(key))?.access_token;
                         if (token) break;
                     } catch (e) { }
                 }
             }
-            if (!token) {
-                try {
-                    const legacy = JSON.parse(localStorage.getItem('supabase.auth.token'));
-                    token = legacy?.currentSession?.access_token;
-                } catch (e) { }
-            }
+            if (!token) try { token = JSON.parse(localStorage.getItem('supabase.auth.token'))?.currentSession?.access_token; } catch (e) { }
 
-            if (!token) {
-                // If local dev without auth, maybe mock? No, enforce auth.
-                throw new Error("Você precisa estar logado.");
-            }
+            if (!token) throw new Error("Autenticação necessária.");
 
-            // Initiate Stream
+            // Request
             const response = await fetch('/api/design-lab/create', {
                 method: 'POST',
                 headers: {
@@ -82,60 +70,86 @@ const DesignLab = () => {
                 })
             });
 
-            if (!response.ok) {
-                const errText = await response.text();
-                throw new Error(errText || `Erro HTTP ${response.status}`);
-            }
+            if (!response.ok) throw new Error(`Erro na conexão com agente (${response.status})`);
 
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
-            let accumulatedText = '';
 
-            // 3. Process Stream & Update UI Live
+            let buffer = '';
+            let codeBuffer = '';
+            let isInsideCode = false;
+            let capturedLogs = [];
+
+            // 3. Process the "Agent Stream Protocol"
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
 
                 const chunk = decoder.decode(value, { stream: true });
-                accumulatedText += chunk;
+                buffer += chunk;
 
-                // Update Logs artificially based on content length to give Feedback
-                // Real parsing of partial JSON is hard, so we simulate progress
-                const progressLogs = ['Analisando requisitos...'];
-                if (accumulatedText.length > 50) progressLogs.push('Gerando estrutura HTML...');
-                if (accumulatedText.length > 500) progressLogs.push('Escrevendo componentes Tailwind...');
-                if (accumulatedText.length > 2000) progressLogs.push('Refinando detalhes...');
+                // --- PARSER LOGIC ---
+                // We parse line by line to extract events
+                const lines = buffer.split('\n');
+                // Keep the last partial line in buffer
+                buffer = lines.pop();
 
-                setCurrentJob(prev => ({
-                    ...prev,
-                    logs: progressLogs,
-                    rawStreamLength: accumulatedText.length
-                }));
+                let stateHasChanged = false;
+
+                for (const line of lines) {
+                    if (line.includes(':::LOG:::')) {
+                        const logMsg = line.split(':::LOG:::')[1].trim();
+                        capturedLogs.push(logMsg);
+                        stateHasChanged = true;
+                    }
+                    else if (line.includes(':::PLAN:::')) {
+                        const planMsg = line.split(':::PLAN:::')[1].trim();
+                        capturedLogs.push(`📋 Plano: ${planMsg}`);
+                        stateHasChanged = true;
+                    }
+                    else if (line.includes(':::CODE_START:::')) {
+                        isInsideCode = true;
+                        capturedLogs.push('💻 Escrevendo código...');
+                        stateHasChanged = true;
+                    }
+                    else if (line.includes(':::CODE_END:::')) {
+                        isInsideCode = false;
+                    }
+                    else if (line.includes(':::ERROR:::')) {
+                        const errMsg = line.split(':::ERROR:::')[1].trim();
+                        throw new Error(errMsg);
+                    }
+                    else if (isInsideCode) {
+                        // It's actual HTML code line
+                        codeBuffer += line + '\n';
+                        stateHasChanged = true;
+                    }
+                }
+
+                if (stateHasChanged) {
+                    setCurrentJob(prev => ({
+                        ...prev,
+                        logs: [...prev.logs, ...capturedLogs.slice(prev.logs.length)], // Add only new logs (simple implementation)
+                        html: codeBuffer // Live code update!
+                    }));
+                }
             }
 
-            // 4. Final Parse
-            const cleanJson = accumulatedText.replace(/```json/g, '').replace(/```/g, '').trim();
-            const jsonStart = cleanJson.indexOf('{');
-            const jsonEnd = cleanJson.lastIndexOf('}');
-
-            if (jsonStart === -1 || jsonEnd === -1) throw new Error("Resposta inválida do agente (JSON incompleto).");
-
-            const designData = JSON.parse(cleanJson.substring(jsonStart, jsonEnd + 1));
-
-            // Update with final result
-            console.log('[DesignLab] Finalizado:', designData);
-            setCurrentJob({
-                ...designData,
-                status: 'complete',
-                logs: ['Design finalizado com sucesso!']
-            });
-
-        } catch (err) {
-            console.error('Agent error:', err);
-            setError(err.message);
-            // Don't switch state to 'error', show error in Workspace via job status
+            // Finalize
+            console.log('[DesignLab] Agente finalizou.');
             setCurrentJob(prev => ({
                 ...prev,
+                status: 'complete',
+                logs: [...prev.logs, '✅ Design finalizado com sucesso!']
+            }));
+
+        } catch (err) {
+            console.error('Agent Failure:', err);
+            setError(err.message);
+            // Show error in logs too
+            setCurrentJob(prev => ({
+                ...prev,
+                logs: [...(prev?.logs || []), `❌ Erro: ${err.message}`],
                 status: 'error',
                 errorMessage: err.message
             }));
@@ -144,32 +158,9 @@ const DesignLab = () => {
 
     const handleRefine = async (refinement) => {
         if (!currentJob?.job_id) return;
-
-        // Similar logic for refinement - immediate feedback
-        setCurrentJob(prev => ({
-            ...prev,
-            status: 'generating',
-            logs: ['Processando refinamento...']
-        }));
-
-        try {
-            // Note: Refine endpoint should also be streamed ideally, 
-            // but for now keeping axios for simplicity unless requested.
-            const response = await api.post(
-                `/design-lab/refine?job_id=${currentJob.job_id}&refinement=${encodeURIComponent(refinement)}`
-            );
-            setCurrentJob({
-                ...response.data,
-                status: 'complete'
-            });
-        } catch (err) {
-            console.error('Refine error:', err);
-            setCurrentJob(prev => ({
-                ...prev,
-                status: 'error',
-                errorMessage: err.response?.data?.detail || 'Erro ao refinar'
-            }));
-        }
+        // Refinement would need similar stream logic updates
+        // For now, we will handle it simply or TODO: Implement stream for refine too
+        alert("Refinamento via agente completo será implementado no próximo passo. Use 'Novo Design' por enquanto.");
     };
 
     const handleBack = () => {
@@ -202,8 +193,6 @@ const DesignLab = () => {
                     />
                 )}
 
-                {/* We removed 'generating' state screen. Now we go straight to preview/workspace */}
-
                 {(state === 'preview' || state === 'error') && currentJob && (
                     <DesignLabWorkspace
                         job={currentJob}
@@ -213,6 +202,7 @@ const DesignLab = () => {
                     />
                 )}
 
+                {/* Only show full error screen if we have no job context */}
                 {state === 'error' && !currentJob && (
                     <div className="flex flex-col items-center justify-center h-full gap-6">
                         <div className="text-red-400 text-lg text-center max-w-md">{error}</div>
