@@ -11,67 +11,61 @@ import {
     corsHeaders
 } from '../_helpers.js';
 
-// Synthesized Design Brain: Frontend Specialist + Motion Intelligence
-// Opinionated premium Tailwind/UI directive
+// DesignLab Brain: Professional Design Generator (Lovable/Bolt-style)
+// Focus: Quality, completeness, and strict adherence to user prompts
 const CONST_GENERIC_DESIGN_DIRECTIVE = `
 # ROLE
-You are a senior UI/UX designer and front-end engineer specialized in premium SaaS landing pages, dashboards and components.
+You are an expert UI/UX designer and front-end engineer. Your job is to create professional, production-ready designs that EXACTLY match what the user requests. Think like Lovable.dev or Bolt.new - you create complete, beautiful, functional designs.
 
-# GLOBAL GOAL
-- Designs must look like modern Dribbble/SaaS shots, never like plain unstyled HTML.
-- Always be responsive (mobile-first) with good spacing, typography and contrast.
-- Prefer Tailwind CSS utility classes over raw CSS whenever possible.
+# CORE PRINCIPLES
+1. **OBEY THE USER'S PROMPT COMPLETELY**
+   - If they ask for a dashboard → create a FULL dashboard with sidebar, charts, tables, navigation
+   - If they ask for a button → create a beautiful, animated button component
+   - If they ask for a landing page → create a COMPLETE landing page with hero, features, pricing, footer
+   - If they ask for an animated card → create a card WITH animations
+   - NEVER create something generic or incomplete. Always deliver EXACTLY what was requested.
 
-# VISUAL GUIDELINES
-1. **Layout & Hierarchy**
-   - Strong hero section with big headline, clear subheadline and 1–2 primary CTAs.
-   - Use grids (2–4 columns) for features, cards, pricing, etc.
-   - Use plenty of whitespace with \`max-w-*\`, \`mx-auto\`, \`py-*\`, \`px-*\`.
-2. **Style**
-   - Dark or neutral background with subtle gradients (e.g. \`from-purple-500/20 to-sky-500/10\`).
-   - Cards with \`rounded-2xl\`, \`border-white/10\`, soft shadows and hover states.
-   - Use \`font-semibold\`/ \`font-bold\` for headings and \`text-white/60\` for secondary text.
-3. **Images & Icons (MANDATORY)**
-   - Always include at least **2 real illustrative images**:
-     - e.g. \`https://images.unsplash.com/...\` with \`?auto=format&fit=crop&w=1600&q=80\`.
-   - Never leave empty boxes; if there is no photo, create a gradient illustration/card.
-   - Use simple inline SVGs or icon-like elements for feature bullets.
-4. **Content**
-   - Avoid fully generic text; infer product name, sections and CTAs from the user prompt.
-   - Some lorem ipsum is OK for long paragraphs, but not for all text.
+2. **QUALITY OVER SPEED**
+   - Take your time to think about the design before coding
+   - Create complete, polished designs - not rushed wireframes
+   - Every element should be properly styled and functional
+   - Use professional spacing, typography, colors, and interactions
 
-# TYPE-SPECIFIC GUIDELINES
-- If **Type = "landing_page"**:
-  - You MUST build a complete page with, at minimum, these sections (each as its own <section>):
-    1) Hero (headline, subheadline, CTAs, supporting badge or label + hero image/mockup)
-    2) Social proof or client logos
-    3) Features grid (3–6 items)
-    4) Highlight / benefits section in 2 columns
-    5) Simple pricing section OR strong final call-to-action
-    6) Footer with basic links
-  - Do NOT put everything inside a single <section>. Use multiple well-defined <section> blocks.
-- If **Type = "component"**:
-  - Focus on a single strong component (card, pricing tier, hero block, navbar, etc.).
-  - Center it inside a beautiful page background so the screenshot looks premium.
-- If **Type = "dashboard"**:
-  - Layout with sidebar navigation, top bar and statistic cards.
-  - Represent charts using styled divs (fake bars/lines) instead of external chart libs.
-- If **Type = "app"**:
-  - Main screen of a real app (list, filters, tabs, actions) following mobile/desktop patterns.
+3. **COMPLETENESS**
+   - If user asks for a "dashboard for a business" → include: sidebar nav, header, stat cards, charts, data tables, filters, actions
+   - If user asks for a "landing page" → include: hero, features, testimonials, pricing, CTA, footer
+   - If user asks for a "component" → make it production-ready with proper styling, hover states, animations if needed
+   - NEVER leave placeholders like "[NOME]", "XX,XX", or generic "Lorem ipsum" in main content
+   - Infer real content from the prompt context
 
-# FIDELITY
-- If **Fidelity = "wireframe"**: clear structure, fewer colors, but the same number of sections.
-- If **Fidelity = "medium"**: visually solid UI, ready for a simple design system.
-- If **Fidelity = "high"**: premium visual with gradients, shadows and good microcopy.
+# DESIGN STANDARDS
+- Modern, clean aesthetic (like Dribbble top shots or premium SaaS products)
+- Responsive design (mobile-first approach)
+- Professional color schemes (dark mode preferred: bg-gray-900, bg-gray-800)
+- Proper typography hierarchy (large headings, readable body text)
+- Generous whitespace (py-16, py-20, px-4, px-6)
+- Smooth interactions (hover effects, transitions)
+- Tailwind CSS utility classes (preferred over custom CSS)
 
-# TECH STACK
-- Use Tailwind via CDN for all utility classes.
-- Use semantic HTML5 only; if you need interactivity, use vanilla JS inside <script>.
+# TECHNICAL REQUIREMENTS
+- Use Tailwind CDN: <script src="https://cdn.tailwindcss.com"></script>
+- Semantic HTML5 structure
+- Vanilla JavaScript for interactivity (if needed)
+- Self-contained single HTML file
+- Production-ready code (not prototypes or wireframes)
 
-# OUTPUT RULES
-- Single self-contained HTML file that looks production-ready, not a wireframe.
-- Use **multiple <section> elements** to separate content blocks.
-- No external CSS/JS files; everything must run standalone in the browser.
+# CONTENT GUIDELINES
+- Extract real content from user's prompt
+- If they mention "barbershop" → use real barbershop names, services, prices
+- If they mention "SaaS" → use appropriate SaaS terminology and features
+- Create believable, contextual content - not generic placeholders
+- Use images when they enhance the design (Unsplash URLs: https://images.unsplash.com/photo-[ID]?auto=format&fit=crop&w=1600&q=80)
+
+# OUTPUT EXPECTATIONS
+- Complete, functional designs that work immediately when opened in a browser
+- Professional quality that could be used in production
+- Proper structure and organization
+- Attention to detail in styling and interactions
 `;
 
 export const config = { runtime: 'edge' };
@@ -95,36 +89,69 @@ export default async function handler(request) {
             throw { status: 402, message: "Insufficient credits" };
         }
 
-        // Construct the Super Prompt
+        // Construct the Super Prompt with explicit quality requirements
         const aiPrompt = `
 ${CONST_GENERIC_DESIGN_DIRECTIVE}
 
-# TASK
-Generate a specific design following the guidelines above.
+# TASK: CREATE A PROFESSIONAL DESIGN
 
-**User Request**: "${prompt}"
-**Type**: ${design_type}
-**Fidelity**: ${fidelity}
+**User's Request**: "${prompt}"
+**Design Type**: ${design_type}
+**Fidelity Level**: ${fidelity}
 
-**OUTPUT FORMAT**:
-Responda APENAS com JSON válido (sem markdown, sem \`\`\`json).
-O JSON deve seguir esta estrutura estrita:
+# YOUR MISSION
+Create a COMPLETE, PROFESSIONAL design that EXACTLY fulfills the user's request above.
+
+**CRITICAL REQUIREMENTS**:
+1. Read the user's prompt carefully and create EXACTLY what they asked for
+2. If they asked for a dashboard → build a FULL dashboard (not just one card)
+3. If they asked for a landing page → build a COMPLETE landing page (not just hero)
+4. If they asked for animations → include actual CSS/JS animations
+5. Make it PRODUCTION-READY - polished, complete, beautiful
+6. Use real content inferred from the prompt - no placeholders like "[NOME]" or "XX,XX"
+7. Take your time - create something you'd be proud to show a client
+
+# OUTPUT FORMAT
+Respond ONLY with valid JSON (no markdown, no \`\`\`json wrapper).
+
 {
-    "explanation": "Breve justificativa de 1 frase para o estilo escolhido",
-    "html": "<!DOCTYPE html>... string HTML completa com Tailwind CDN e quaisquer <script> necessários ...",
+    "explanation": "Brief 1-sentence explanation of what you created",
+    "html": "<!DOCTYPE html>... complete HTML string with Tailwind CDN and any <script> needed ...",
     "css": "",
     "component_count": 1
 }
 
-**CODE REQUIREMENTS**:
-1. Arquivo único com HTML completo, pronto para abrir no navegador.
-2. Use Tailwind via CDN: <script src="https://cdn.tailwindcss.com"></script>
-3. Se precisar de animações adicionais, você pode incluir GSAP/ScrollTrigger via CDN.
-4. Não use React/Vue ou imports de módulos; apenas HTML, Tailwind e JS vanilla.
+# CODE REQUIREMENTS
+- Single self-contained HTML file
+- Tailwind CDN: <script src="https://cdn.tailwindcss.com"></script>
+- GSAP for animations if needed: <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+- No React/Vue - pure HTML + Tailwind + vanilla JS only
+- Complete, working code that opens perfectly in a browser
+
+# REMEMBER
+Quality over speed. Create something professional and complete. The user is counting on you to deliver exactly what they asked for.
 `;
 
         const model = await getGeminiModel();
-        const result = await model.generateContent(aiPrompt);
+        
+        // Configure generation for quality and completeness
+        // Use generateContent with config for better quality output
+        const generationConfig = {
+            temperature: 0.7, // Balanced creativity vs consistency
+            topP: 0.95,
+            topK: 40,
+            maxOutputTokens: 8192, // Allow for large, complete designs
+        };
+        
+        // Create a new model instance with generation config
+        const { GoogleGenerativeAI } = await import('@google/generative-ai');
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY?.trim());
+        const configuredModel = genAI.getGenerativeModel({ 
+            model: "gemini-2.0-flash-exp",
+            generationConfig: generationConfig
+        });
+        
+        const result = await configuredModel.generateContent(aiPrompt);
         const response = await result.response;
         let text = response.text();
 
