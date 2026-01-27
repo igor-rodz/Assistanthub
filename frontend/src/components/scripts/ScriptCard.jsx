@@ -10,7 +10,7 @@ const ScriptCard = ({ script, onView }) => {
 
     // Ajusta a altura do iframe baseado no conteúdo (opcional, aqui fixaremos altura para o card)
     useEffect(() => {
-        if (iframeRef.current) {
+        if (iframeRef.current && script.script_content) {
             // Injeta CSS básico para garantir que o preview fique bonito
             const style = `
                 <style>
@@ -19,10 +19,10 @@ const ScriptCard = ({ script, onView }) => {
                 </style>
             `;
             // Envolvendo o código para centralização se for componente pequeno
-            const content = style + script.code;
+            const content = style + script.script_content;
             iframeRef.current.srcdoc = content;
         }
-    }, [script.code]);
+    }, [script.script_content]);
 
     return (
         <div
@@ -46,7 +46,7 @@ const ScriptCard = ({ script, onView }) => {
                     </div>
                 </div>
 
-                {script.tags.includes('Novo') && (
+                {script.tags?.includes('Novo') && (
                     <div className="px-2 py-0.5 rounded-full bg-purple-500/20 border border-purple-500/20">
                         <span className="text-[10px] font-medium text-purple-300">Novo</span>
                     </div>
