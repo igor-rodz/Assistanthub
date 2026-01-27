@@ -320,41 +320,41 @@ ${job.html || ''}
 
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col min-w-0">
-                {/* Enhanced Top Bar */}
-                <div className="h-14 border-b border-white/[0.06] flex items-center justify-between px-4 bg-[#0a0a0c]">
-                    {/* Left - Tab Navigation */}
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-1 p-1 bg-white/[0.03] rounded-xl">
+                {/* Enhanced Top Bar - Fixed Layout */}
+                <div className="h-14 border-b border-white/[0.06] flex items-center px-4 bg-[#0a0a0c] gap-4 relative">
+                    {/* Left - Tab Navigation (Takes available space initially) */}
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="flex items-center gap-1 p-1 bg-white/[0.03] rounded-xl shrink-0">
                             <button
                                 onClick={() => setActiveTab('preview')}
                                 className={cn(
-                                    "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                                    "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200",
                                     activeTab === 'preview'
                                         ? "bg-white text-black shadow-lg"
                                         : "text-white/50 hover:text-white/80 hover:bg-white/[0.05]"
                                 )}
                             >
                                 <Eye size={14} />
-                                Preview
+                                <span className="hidden sm:inline">Preview</span>
                             </button>
                             <button
                                 onClick={() => setActiveTab('code')}
                                 className={cn(
-                                    "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                                    "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200",
                                     activeTab === 'code'
                                         ? "bg-white text-black shadow-lg"
                                         : "text-white/50 hover:text-white/80 hover:bg-white/[0.05]"
                                 )}
                             >
                                 <Code2 size={14} />
-                                Código
+                                <span className="hidden sm:inline">Código</span>
                             </button>
                         </div>
 
-                        <div className="h-6 w-px bg-white/[0.08]" />
+                        <div className="h-4 w-px bg-white/[0.08] shrink-0" />
 
-                        {/* Viewport Toggles */}
-                        <div className="flex items-center gap-1 p-1 bg-white/[0.03] rounded-xl">
+                        {/* Viewport Toggles (Hidden on very small screens) */}
+                        <div className="hidden md:flex items-center gap-1 p-1 bg-white/[0.03] rounded-xl shrink-0">
                             {[
                                 { id: 'desktop', icon: Monitor, label: 'Desktop' },
                                 { id: 'tablet', icon: Tablet, label: 'Tablet' },
@@ -365,22 +365,23 @@ ${job.html || ''}
                                     onClick={() => setViewport(vp.id)}
                                     title={vp.label}
                                     className={cn(
-                                        "p-2 rounded-lg transition-all duration-200",
+                                        "p-1.5 rounded-lg transition-all duration-200",
                                         viewport === vp.id
                                             ? "bg-white/10 text-white"
                                             : "text-white/40 hover:text-white/70 hover:bg-white/[0.05]"
                                     )}
                                 >
-                                    <vp.icon size={16} />
+                                    <vp.icon size={14} />
                                 </button>
                             ))}
                         </div>
                     </div>
 
-                    {/* Center - Zoom Controls */}
+                    {/* Center - Zoom Controls (Only show if space allows, usually centered) */}
                     {activeTab === 'preview' && (
-                        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
-                            <div className="flex items-center gap-1 p-1 bg-white/[0.03] rounded-xl">
+                        <div className="flex items-center gap-2 absolute left-1/2 -translate-x-1/2 pointer-events-none md:pointer-events-auto opacity-0 md:opacity-100 transition-opacity">
+                            {/* Keep absolute only for large screens where we WANT it centered, but hide on small screens or collision */}
+                            <div className="flex items-center gap-1 p-1 bg-white/[0.03] rounded-xl shadow-sm border border-black/20">
                                 <button
                                     onClick={() => handleZoom('out')}
                                     className="p-1.5 rounded-lg text-white/40 hover:text-white/70 hover:bg-white/[0.05] transition-all"
@@ -388,7 +389,7 @@ ${job.html || ''}
                                 >
                                     <ZoomOut size={14} />
                                 </button>
-                                <span className="w-12 text-center text-xs font-medium text-white/50">
+                                <span className="w-10 text-center text-xs font-medium text-white/50 tabular-nums">
                                     {zoom}%
                                 </span>
                                 <button
@@ -398,24 +399,16 @@ ${job.html || ''}
                                 >
                                     <ZoomIn size={14} />
                                 </button>
-                                <div className="w-px h-4 bg-white/10 mx-1" />
-                                <button
-                                    onClick={() => handleZoom('reset')}
-                                    className="p-1.5 rounded-lg text-white/40 hover:text-white/70 hover:bg-white/[0.05] transition-all"
-                                    title="Reset zoom"
-                                >
-                                    <RotateCcw size={14} />
-                                </button>
                             </div>
 
                             <button
                                 onClick={() => setShowGrid(!showGrid)}
                                 title="Toggle grid (⌘G)"
                                 className={cn(
-                                    "p-2 rounded-lg transition-all",
+                                    "p-1.5 rounded-lg transition-all border",
                                     showGrid
-                                        ? "bg-teal-500/10 text-teal-400 border border-teal-500/20"
-                                        : "text-white/40 hover:text-white/70 hover:bg-white/[0.05]"
+                                        ? "bg-teal-500/10 text-teal-400 border-teal-500/20"
+                                        : "text-white/40 hover:text-white/70 hover:bg-white/[0.05] border-transparent"
                                 )}
                             >
                                 <Grid3X3 size={16} />
@@ -423,32 +416,39 @@ ${job.html || ''}
                         </div>
                     )}
 
-                    {/* Right - Actions */}
-                    <div className="flex items-center gap-2">
+                    {/* Right - Actions (Takes available space at end) */}
+                    <div className="flex items-center gap-3 shrink-0 justify-end flex-1">
+                        {/* Zoom for mobile (shown only when center is hidden) */}
+                        {activeTab === 'preview' && (
+                            <div className="md:hidden flex items-center gap-1 bg-white/[0.03] rounded-lg px-2 py-1">
+                                <span className="text-xs text-white/50">{zoom}%</span>
+                            </div>
+                        )}
+
                         <button
                             onClick={() => setIsFullscreen(!isFullscreen)}
                             title="Fullscreen (⌘⇧F)"
-                            className="p-2 rounded-lg text-white/40 hover:text-white/70 hover:bg-white/[0.05] transition-all"
+                            className="p-2 rounded-lg text-white/40 hover:text-white/70 hover:bg-white/[0.05] transition-all hidden sm:flex"
                         >
                             <Maximize2 size={16} />
                         </button>
 
-                        <div className="h-6 w-px bg-white/[0.08]" />
+                        <div className="h-4 w-px bg-white/[0.08] hidden sm:block" />
 
                         <button
                             onClick={handleOpenInNewTab}
-                            className="flex items-center gap-2 px-4 py-2 text-sm text-white/70 hover:text-white bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.08] hover:border-white/[0.15] rounded-xl transition-all"
+                            className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-white/70 hover:text-white bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.08] hover:border-white/[0.15] rounded-xl transition-all"
                         >
                             <ExternalLink size={14} />
-                            Abrir
+                            <span className="hidden sm:inline">Abrir</span>
                         </button>
 
                         <div className="relative">
                             <button
                                 onClick={() => setShowQuickActions(!showQuickActions)}
-                                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 rounded-xl shadow-lg shadow-teal-500/20 hover:shadow-teal-500/30 transition-all"
+                                className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-white bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 rounded-xl shadow-lg shadow-teal-500/20 hover:shadow-teal-500/30 transition-all"
                             >
-                                Exportar
+                                <span>Exportar</span>
                                 <ChevronDown size={14} className={cn(
                                     "transition-transform duration-200",
                                     showQuickActions && "rotate-180"
