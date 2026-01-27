@@ -98,13 +98,7 @@ const Layout = ({ children }) => {
                 <Wand2 className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
             ),
         },
-        {
-            label: "Design Lab",
-            href: "/design-lab",
-            icon: (
-                <Palette className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-            ),
-        },
+        // Design Lab link removed
         {
             label: "Scripts",
             href: "/scripts",

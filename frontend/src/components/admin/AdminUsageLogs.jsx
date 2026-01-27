@@ -43,7 +43,7 @@ const AdminUsageLogs = () => {
             key: 'tool_used', label: 'Ferramenta', render: (row) => (
                 <span className={`px-2 py-1 rounded text-xs font-bold ${row.tool_used === 'oneshot_fixes' ? 'bg-blue-500/20 text-blue-400' : 'bg-purple-500/20 text-purple-400'
                     }`}>
-                    {row.tool_used === 'oneshot_fixes' ? 'OneShot' : 'Design Lab'}
+                    {row.tool_used === 'oneshot_fixes' ? 'OneShot' : row.tool_used}
                 </span>
             )
         },
@@ -103,7 +103,7 @@ const AdminUsageLogs = () => {
                 >
                     <option value="">Todas as ferramentas</option>
                     <option value="oneshot_fixes">OneShot Fixes</option>
-                    <option value="design_lab">Design Lab</option>
+// Option removed
                 </select>
             </div>
 

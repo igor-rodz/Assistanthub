@@ -205,7 +205,7 @@ const DashboardContent = ({ metrics, tools, user, onOpenTool }) => {
           <h2 data-testid="metrics-title" className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">
             Métricas Chave
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
             <MetricCard
               icon={Zap}
               title="Correções"
@@ -213,14 +213,6 @@ const DashboardContent = ({ metrics, tools, user, onOpenTool }) => {
               subtitle="One-Shot"
               colorClass="bg-gradient-to-br from-purple-900/60 to-purple-950/80 border border-purple-500/20"
               glowClass="shadow-[0_0_40px_rgba(168,85,247,0.15)]"
-            />
-            <MetricCard
-              icon={Star}
-              title="Designs"
-              value={metrics?.designs || 0}
-              subtitle="Criados"
-              colorClass="bg-gradient-to-br from-red-900/60 to-red-950/80 border border-red-500/20"
-              glowClass="shadow-[0_0_40px_rgba(239,68,68,0.15)]"
             />
             <MetricCard
               icon={Bookmark}
