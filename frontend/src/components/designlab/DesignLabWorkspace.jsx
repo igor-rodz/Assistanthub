@@ -252,16 +252,12 @@ ${job.html || ''}
                         </div>
                     </div>
 
-                    {/* Chat History */}
+                    {/* Chat History & Logs */}
                     <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
                         {iterations.map((item, idx) => (
                             <div
                                 key={item.id}
-                                className={cn(
-                                    "group animate-in fade-in slide-in-from-bottom-2",
-                                    "duration-300"
-                                )}
-                                style={{ animationDelay: `${idx * 50}ms` }}
+                                className="group animate-in fade-in slide-in-from-bottom-2 duration-300"
                             >
                                 <div className="flex items-center gap-2 text-[11px] text-white/30 mb-2">
                                     <div className="w-5 h-5 rounded-full bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center">
@@ -279,7 +275,47 @@ ${job.html || ''}
                                 </div>
                             </div>
                         ))}
+
+                        {/* Active Agent Logs - The "Bolt" Effect */}
+                        {job.status === 'generating' && (
+                            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                <div className="flex items-center gap-2 text-[11px] text-teal-400 mb-2">
+                                    <div className="w-5 h-5 rounded-full bg-teal-500/20 flex items-center justify-center animate-pulse">
+                                        <Sparkles size={10} className="text-teal-400" />
+                                    </div>
+                                    <span className="font-medium">IA Trabalhando...</span>
+                                </div>
+                                <div className="ml-7 space-y-2">
+                                    {job.logs && job.logs.map((log, i) => (
+                                        <div key={i} className="flex items-center gap-2 text-xs text-white/50 animate-in fade-in duration-300">
+                                            {i === job.logs.length - 1 ? (
+                                                <div className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-ping" />
+                                            ) : (
+                                                <div className="w-1.5 h-1.5 rounded-full bg-white/20" />
+                                            )}
+                                            <span>{log}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Error State in Chat */}
+                        {job.status === 'error' && (
+                            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                <div className="flex items-center gap-2 text-[11px] text-red-400 mb-2">
+                                    <div className="w-5 h-5 rounded-full bg-red-500/20 flex items-center justify-center">
+                                        <div className="w-1.5 h-1.5 bg-red-400 rounded-sm" />
+                                    </div>
+                                    <span className="font-medium">Erro</span>
+                                </div>
+                                <div className="ml-7 bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-xs text-red-300">
+                                    {job.errorMessage || "Falha na geração do design."}
+                                </div>
+                            </div>
+                        )}
                     </div>
+
 
                     {/* Enhanced Input Area */}
                     <div className="p-4 border-t border-white/[0.06] bg-[#0a0a0c]">
@@ -560,12 +596,41 @@ ${job.html || ''}
                                     "bg-white rounded-xl overflow-hidden shadow-2xl shadow-black/50",
                                     viewport !== 'desktop' && "border-[8px] border-[#1c1c1e] rounded-[28px]"
                                 )}>
-                                    <DesignLabPreview
-                                        html={job.html}
-                                        css={job.css}
-                                        viewport={viewport}
-                                        zoom={100}
-                                    />
+                                    {job.html ? (
+                                        <DesignLabPreview
+                                            html={job.html}
+                                            css={job.css}
+                                            viewport={viewport}
+                                            zoom={100}
+                                        />
+                                    ) : (
+                                        <div className="w-full h-[600px] bg-white flex flex-col">
+                                            {/* Skeleton UI Header */}
+                                            <div className="h-16 border-b border-gray-100 flex items-center px-8 justify-between">
+                                                <div className="w-32 h-6 bg-gray-100 rounded animate-pulse" />
+                                                <div className="flex gap-4">
+                                                    <div className="w-16 h-4 bg-gray-100 rounded animate-pulse" />
+                                                    <div className="w-16 h-4 bg-gray-100 rounded animate-pulse" />
+                                                    <div className="w-16 h-4 bg-gray-100 rounded animate-pulse" />
+                                                </div>
+                                            </div>
+                                            {/* Skeleton UI Hero */}
+                                            <div className="flex-1 p-12 flex flex-col items-center justify-center space-y-6">
+                                                <div className="w-3/4 h-12 bg-gray-100 rounded-lg animate-pulse" />
+                                                <div className="w-1/2 h-4 bg-gray-100 rounded animate-pulse" />
+                                                <div className="flex gap-4 mt-8">
+                                                    <div className="w-32 h-10 bg-gray-200 rounded-lg animate-pulse" />
+                                                    <div className="w-32 h-10 bg-gray-100 rounded-lg animate-pulse" />
+                                                </div>
+
+                                                {/* Streaming text indicator */}
+                                                <div className="mt-12 w-full max-w-2xl p-4 rounded-lg bg-teal-50 border border-teal-100 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                                    <div className="w-4 h-4 rounded-full border-2 border-teal-500 border-t-transparent animate-spin" />
+                                                    <span className="text-sm text-teal-700 font-medium">Escrevendo código HTML...</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

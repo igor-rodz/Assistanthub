@@ -3,59 +3,49 @@ import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../lib/api';
 import DesignLabPromptInput from './DesignLabPromptInput';
-import DesignLabGenerating from './DesignLabGenerating';
+// DesignLabGenerating removed as we skip this screen now
 import DesignLabWorkspace from './DesignLabWorkspace';
 
 // API Config is handled in lib/api.js
 
 /**
  * DesignLab - Main container with state machine
- * States: idle -> generating -> preview
+ * States: idle -> preview (generating is now part of preview state)
  */
 const DesignLab = () => {
     const navigate = useNavigate();
-    const [state, setState] = useState('idle'); // idle, generating, preview, error
+    const [state, setState] = useState('idle'); // idle, preview, error
     const [prompt, setPrompt] = useState('');
     const [designType, setDesignType] = useState('component');
     const [fidelity, setFidelity] = useState('high');
     const [currentJob, setCurrentJob] = useState(null);
     const [error, setError] = useState(null);
-    const [generatingMessages, setGeneratingMessages] = useState([]);
 
     const handleSubmit = async (submittedPrompt, type, fid) => {
         setPrompt(submittedPrompt);
         setDesignType(type || designType);
         setFidelity(fid || fidelity);
-        setState('generating');
+
+        // 1. Immediate Navigation to Workspace (Dynamic Feel)
+        // We create a temporary job object to show the UI immediately
+        const tempJobId = 'temp-' + Date.now();
+        setCurrentJob({
+            job_id: tempJobId,
+            status: 'generating', // Important: Workspace detects this to show loaders/logs
+            html: '',
+            css: '',
+            explanation: 'Iniciando agente de design...',
+            logs: ['Conectando ao cérebro de design...']
+        });
+        setState('preview');
         setError(null);
 
-        const messages = [
-            'Conectando ao cérebro de design...',
-            'Analisando requisitos complexos...',
-            'Desenhando estrutura visual...',
-            'Escrevendo código HTML/CSS...',
-            'Polindo detalhes finais...',
-        ];
-
-        let messageIndex = 0;
-        setGeneratingMessages([messages[0]]);
-        const messageInterval = setInterval(() => {
-            messageIndex = (messageIndex + 1) % messages.length;
-            setGeneratingMessages(prev => {
-                // Keep only last few distinct messages to avoid clutter
-                const newMsgs = [...prev, messages[messageIndex]];
-                if (newMsgs.length > 3) newMsgs.shift();
-                return newMsgs;
-            });
-        }, 3000);
-
+        // 2. Start Streaming Process in Background
         try {
-            console.log('[DesignLab] Iniciando Stream:', submittedPrompt);
+            console.log('[DesignLab] Iniciando Agente:', submittedPrompt);
 
-            // FIX: Robust Authentication Retrieval
+            // Auth Token Retrieval (Robust)
             let token = null;
-
-            // 1. Try to find Supabase token in LocalStorage (key pattern: sb-<ref>-auth-token)
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
                 if (key.startsWith('sb-') && key.endsWith('-auth-token')) {
@@ -63,11 +53,9 @@ const DesignLab = () => {
                         const sessionData = JSON.parse(localStorage.getItem(key));
                         token = sessionData?.access_token;
                         if (token) break;
-                    } catch (e) { console.warn('Invalid session json', key); }
+                    } catch (e) { }
                 }
             }
-
-            // 2. Fallback: Check possible legacy key
             if (!token) {
                 try {
                     const legacy = JSON.parse(localStorage.getItem('supabase.auth.token'));
@@ -76,10 +64,11 @@ const DesignLab = () => {
             }
 
             if (!token) {
-                console.error("Token de autenticação não encontrado!");
-                throw new Error("Você precisa estar logado para criar designs. Tente sair e entrar novamente.");
+                // If local dev without auth, maybe mock? No, enforce auth.
+                throw new Error("Você precisa estar logado.");
             }
 
+            // Initiate Stream
             const response = await fetch('/api/design-lab/create', {
                 method: 'POST',
                 headers: {
@@ -94,25 +83,15 @@ const DesignLab = () => {
             });
 
             if (!response.ok) {
-                // If 401 happens again, standard API might handle refresh, but raw fetch won't.
-                if (response.status === 401) {
-                    throw new Error("Sessão expirada. Recarregue a página.");
-                }
                 const errText = await response.text();
-                // Try to parse json error if possible
-                try {
-                    const jsonErr = JSON.parse(errText);
-                    throw new Error(jsonErr.message || jsonErr.error || errText);
-                } catch (e) {
-                    throw new Error(errText || `Erro HTTP ${response.status}`);
-                }
+                throw new Error(errText || `Erro HTTP ${response.status}`);
             }
 
-            // Stream Reader
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
             let accumulatedText = '';
 
+            // 3. Process Stream & Update UI Live
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
@@ -120,68 +99,87 @@ const DesignLab = () => {
                 const chunk = decoder.decode(value, { stream: true });
                 accumulatedText += chunk;
 
-                // Optional: Update UI with code length or "thinking" effect
-                // setGeneratingMessages(prev => [...prev.slice(0, -1), `Gerando código... (${accumulatedText.length} bytes)`]);
+                // Update Logs artificially based on content length to give Feedback
+                // Real parsing of partial JSON is hard, so we simulate progress
+                const progressLogs = ['Analisando requisitos...'];
+                if (accumulatedText.length > 50) progressLogs.push('Gerando estrutura HTML...');
+                if (accumulatedText.length > 500) progressLogs.push('Escrevendo componentes Tailwind...');
+                if (accumulatedText.length > 2000) progressLogs.push('Refinando detalhes...');
+
+                setCurrentJob(prev => ({
+                    ...prev,
+                    logs: progressLogs,
+                    rawStreamLength: accumulatedText.length
+                }));
             }
 
-            clearInterval(messageInterval);
-
-            // Parse final JSON
+            // 4. Final Parse
             const cleanJson = accumulatedText.replace(/```json/g, '').replace(/```/g, '').trim();
             const jsonStart = cleanJson.indexOf('{');
             const jsonEnd = cleanJson.lastIndexOf('}');
 
-            if (jsonStart === -1 || jsonEnd === -1) {
-                console.error("Raw response:", accumulatedText);
-                throw new Error("Falha ao processar resposta do servidor (JSON inválido). Veja o console.");
-            }
+            if (jsonStart === -1 || jsonEnd === -1) throw new Error("Resposta inválida do agente (JSON incompleto).");
 
             const designData = JSON.parse(cleanJson.substring(jsonStart, jsonEnd + 1));
 
-            console.log('[DesignLab] Stream completo:', designData);
-            setCurrentJob(designData);
-            setState('preview');
+            // Update with final result
+            console.log('[DesignLab] Finalizado:', designData);
+            setCurrentJob({
+                ...designData,
+                status: 'complete',
+                logs: ['Design finalizado com sucesso!']
+            });
 
         } catch (err) {
-            clearInterval(messageInterval);
-            console.error('Design creation error:', err);
-            setError(err.message || 'Erro desconhecido na geração.');
-            setState('error');
+            console.error('Agent error:', err);
+            setError(err.message);
+            // Don't switch state to 'error', show error in Workspace via job status
+            setCurrentJob(prev => ({
+                ...prev,
+                status: 'error',
+                errorMessage: err.message
+            }));
         }
     };
 
     const handleRefine = async (refinement) => {
         if (!currentJob?.job_id) return;
-        setState('generating');
-        setGeneratingMessages(['Aplicando refinamentos...']);
+
+        // Similar logic for refinement - immediate feedback
+        setCurrentJob(prev => ({
+            ...prev,
+            status: 'generating',
+            logs: ['Processando refinamento...']
+        }));
+
         try {
-            // Note: Refine is still using axios (api) which is fine for short requests,
-            // but if refine becomes complex, it should also move to streaming.
+            // Note: Refine endpoint should also be streamed ideally, 
+            // but for now keeping axios for simplicity unless requested.
             const response = await api.post(
                 `/design-lab/refine?job_id=${currentJob.job_id}&refinement=${encodeURIComponent(refinement)}`
             );
-            setCurrentJob(response.data);
-            setState('preview');
+            setCurrentJob({
+                ...response.data,
+                status: 'complete'
+            });
         } catch (err) {
             console.error('Refine error:', err);
-            setError(err.response?.data?.detail || 'Erro ao refinar design');
-            setState('error');
+            setCurrentJob(prev => ({
+                ...prev,
+                status: 'error',
+                errorMessage: err.response?.data?.detail || 'Erro ao refinar'
+            }));
         }
     };
 
     const handleBack = () => {
-        if (state === 'preview' || state === 'error') {
+        if (state === 'preview') {
             setState('idle');
             setCurrentJob(null);
             setError(null);
         } else {
             navigate('/dashboard');
         }
-    };
-
-    const handleCancel = () => {
-        setState('idle');
-        setGeneratingMessages([]);
     };
 
     return (
@@ -204,14 +202,9 @@ const DesignLab = () => {
                     />
                 )}
 
-                {state === 'generating' && (
-                    <DesignLabGenerating
-                        messages={generatingMessages}
-                        onCancel={handleCancel}
-                    />
-                )}
+                {/* We removed 'generating' state screen. Now we go straight to preview/workspace */}
 
-                {state === 'preview' && currentJob && (
+                {(state === 'preview' || state === 'error') && currentJob && (
                     <DesignLabWorkspace
                         job={currentJob}
                         prompt={prompt}
@@ -220,15 +213,10 @@ const DesignLab = () => {
                     />
                 )}
 
-                {state === 'error' && (
+                {state === 'error' && !currentJob && (
                     <div className="flex flex-col items-center justify-center h-full gap-6">
                         <div className="text-red-400 text-lg text-center max-w-md">{error}</div>
-                        <button
-                            onClick={() => setState('idle')}
-                            className="px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 rounded-xl font-medium transition-all shadow-lg shadow-teal-500/20 hover:shadow-teal-500/30"
-                        >
-                            Tentar Novamente
-                        </button>
+                        <button onClick={() => setState('idle')} className="px-6 py-3 bg-white/10 rounded-xl">Voltar</button>
                     </div>
                 )}
             </div>
