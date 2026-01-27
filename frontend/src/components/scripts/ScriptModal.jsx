@@ -73,7 +73,7 @@ const ScriptModal = ({ script, onClose }) => {
                     </div>
                 </div>
 
-                {/* Main Content (Sandpack Full) */}
+                {/* Main Content - Preview only (no code, no editor) */}
                 <div className="flex-1 overflow-hidden relative bg-[#050505]">
                     <Sandpack
                         template="react-ts"
@@ -87,15 +87,19 @@ const ScriptModal = ({ script, onClose }) => {
                         }}
                         options={{
                             showNavigator: false,
-                            showTabs: true, // Mostra abas Code/Preview
+                            showTabs: false,
                             showConsole: false,
-                            editorHeight: "100%", // Ocupa todo espaço disponível
-                            layout: "preview", // Preview à direita por padrão (responsivo)
+                            showEditor: false,
+                            layout: "preview",
+                            editorHeight: "100%",
                             classes: {
-                                "sp-layout": "!h-full !border-none !rounded-none",
+                                // Ocupa toda a altura disponível
+                                "sp-layout":
+                                    "!h-full !border-none !rounded-none " +
+                                    "[&_.sp-tabs]:hidden [&_.sp-editor]:hidden [&_.sp-console]:hidden [&_.sp-toolbar]:hidden",
                                 "sp-preview": "!h-full",
-                                "sp-preview-iframe": "!h-full",
-                            }
+                                "sp-preview-iframe": "!h-full !bg-transparent",
+                            },
                         }}
                     />
                 </div>
