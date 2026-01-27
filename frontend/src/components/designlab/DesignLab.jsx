@@ -29,60 +29,99 @@ const DesignLab = () => {
         setState('generating');
         setError(null);
 
-        // Progressive messages
         const messages = [
-            'Analisando requisitos...',
-            'Criando estrutura de layout...',
-            'Gerando componentes...',
-            'Aplicando estilos premium...',
-            'Finalizando design...'
+            'Conectando ao cérebro de design...',
+            'Analisando requisitos complexos...',
+            'Desenhando estrutura visual...',
+            'Escrevendo código HTML/CSS...',
+            'Polindo detalhes finais...',
         ];
 
         let messageIndex = 0;
         setGeneratingMessages([messages[0]]);
-
         const messageInterval = setInterval(() => {
-            messageIndex++;
-            if (messageIndex < messages.length) {
-                setGeneratingMessages(prev => [...prev, messages[messageIndex]]);
-            }
-        }, 1500);
+            messageIndex = (messageIndex + 1) % messages.length;
+            setGeneratingMessages(prev => {
+                // Keep only last few distinct messages to avoid clutter
+                const newMsgs = [...prev, messages[messageIndex]];
+                if (newMsgs.length > 3) newMsgs.shift();
+                return newMsgs;
+            });
+        }, 3000);
 
         try {
-            console.log('[DesignLab] Enviando requisição para criar design...');
-            console.log('[DesignLab] Prompt:', submittedPrompt);
-            console.log('[DesignLab] Type:', type || designType, 'Fidelity:', fid || fidelity);
+            console.log('[DesignLab] Iniciando Stream:', submittedPrompt);
 
-            const response = await api.post('/design-lab/create', {
-                prompt: submittedPrompt,
-                design_type: type || designType,
-                fidelity: fid || fidelity
+            // Use native fetch for streaming explicitly
+            const token = localStorage.getItem('supabase.auth.token')
+                ? JSON.parse(localStorage.getItem('supabase.auth.token')).currentSession?.access_token
+                : null;
+
+            // Fallback for getting token if using cookie auth or other method in lib/api
+            // Ideally we should export getToken from lib/api, but let's try direct access
+            let authHeader = {};
+            if (token) {
+                authHeader = { 'Authorization': `Bearer ${token}` };
+            } else {
+                // Try to match how api interceptor works or just hope for cookie auth if standard
+                // For now assuming token in localStorage as standard Supabase
+            }
+
+            const response = await fetch('/api/design-lab/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...authHeader
+                },
+                body: JSON.stringify({
+                    prompt: submittedPrompt,
+                    design_type: type || designType,
+                    fidelity: fid || fidelity
+                })
             });
 
+            if (!response.ok) {
+                const errText = await response.text();
+                throw new Error(errText || `Erro HTTP ${response.status}`);
+            }
+
+            // Stream Reader
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let accumulatedText = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value, { stream: true });
+                accumulatedText += chunk;
+
+                // Optional: Update UI with code length or "thinking" effect
+                // setGeneratingMessages(prev => [...prev.slice(0, -1), `Gerando código... (${accumulatedText.length} bytes)`]);
+            }
+
             clearInterval(messageInterval);
-            console.log('[DesignLab] Design criado com sucesso:', response.data);
-            setCurrentJob(response.data);
+
+            // Parse final JSON
+            const cleanJson = accumulatedText.replace(/```json/g, '').replace(/```/g, '').trim();
+            const jsonStart = cleanJson.indexOf('{');
+            const jsonEnd = cleanJson.lastIndexOf('}');
+
+            if (jsonStart === -1 || jsonEnd === -1) {
+                throw new Error("Formato de resposta inválido (JSON não encontrado)");
+            }
+
+            const designData = JSON.parse(cleanJson.substring(jsonStart, jsonEnd + 1));
+
+            console.log('[DesignLab] Stream completo:', designData);
+            setCurrentJob(designData);
             setState('preview');
 
         } catch (err) {
             clearInterval(messageInterval);
             console.error('Design creation error:', err);
-
-            // Detailed error logging
-            if (err.code === 'ECONNABORTED') {
-                console.error('[DesignLab] Timeout: A requisição demorou mais de 60 segundos');
-                setError('A geração de design está demorando muito. Por favor, tente novamente com um prompt mais simples.');
-            } else if (err.response) {
-                console.error('[DesignLab] Erro do servidor:', err.response.status, err.response.data);
-                setError(err.response?.data?.detail || `Erro do servidor: ${err.response.status}`);
-            } else if (err.request) {
-                console.error('[DesignLab] Nenhuma resposta do servidor');
-                setError('Não foi possível conectar ao servidor backend. Por favor, certifique-se de que rodou "npm start" na pasta raiz.');
-            } else {
-                console.error('[DesignLab] Erro desconhecido:', err.message);
-                setError(`Erro inesperado: ${err.message}`);
-            }
-
+            setError(err.message || 'Erro desconhecido na geração.');
             setState('error');
         }
     };

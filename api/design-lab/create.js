@@ -6,232 +6,147 @@ import {
     deductCredits,
     uuidv4,
     getRequestBody,
-    createResponse,
-    createErrorResponse,
     corsHeaders
 } from '../_helpers.js';
 
-// DesignLab Brain: Professional Design Generator (Lovable/Bolt-style)
-// Focus: Quality, completeness, and strict adherence to user prompts
-const CONST_GENERIC_DESIGN_DIRECTIVE = `
-# ROLE
-You are an expert UI/UX designer and front-end engineer. Your job is to create professional, production-ready designs that EXACTLY match what the user requests. Think like Lovable.dev or Bolt.new - you create complete, beautiful, functional designs.
+// DesignLab Brain: Streaming Implementation
+// Focus: Bypass Vercel timeouts by streaming chunks immediately
 
-# CORE PRINCIPLES
-1. **OBEY THE USER'S PROMPT COMPLETELY**
-   - If they ask for a dashboard → create a FULL dashboard with sidebar, charts, tables, navigation
-   - If they ask for a button → create a beautiful, animated button component
-   - If they ask for a landing page → create a COMPLETE landing page with hero, features, pricing, footer
-   - If they ask for an animated card → create a card WITH animations
-   - NEVER create something generic or incomplete. Always deliver EXACTLY what was requested.
+export const config = {
+    // runtime: 'edge', // Edge is good for streaming, but Node.js is safer for Supabase compat currently.
+    // We will use standard Node.js streaming response.
+    maxDuration: 60 // Giving us max time, but streaming starts instantly
+};
 
-2. **QUALITY OVER SPEED**
-   - Take your time to think about the design before coding
-   - Create complete, polished designs - not rushed wireframes
-   - Every element should be properly styled and functional
-   - Use professional spacing, typography, colors, and interactions
-
-3. **COMPLETENESS**
-   - If user asks for a "dashboard for a business" → include: sidebar nav, header, stat cards, charts, data tables, filters, actions
-   - If user asks for a "landing page" → include: hero, features, testimonials, pricing, CTA, footer
-   - If user asks for a "component" → make it production-ready with proper styling, hover states, animations if needed
-   - NEVER leave placeholders like "[NOME]", "XX,XX", or generic "Lorem ipsum" in main content
-   - Infer real content from the prompt context
-
-# DESIGN STANDARDS
-- Modern, clean aesthetic (like Dribbble top shots or premium SaaS products)
-- Responsive design (mobile-first approach)
-- Professional color schemes (dark mode preferred: bg-gray-900, bg-gray-800)
-- Proper typography hierarchy (large headings, readable body text)
-- Generous whitespace (py-16, py-20, px-4, px-6)
-- Smooth interactions (hover effects, transitions)
-- Tailwind CSS utility classes (preferred over custom CSS)
-
-# TECHNICAL REQUIREMENTS
-- Use Tailwind CDN: <script src="https://cdn.tailwindcss.com"></script>
-- Semantic HTML5 structure
-- Vanilla JavaScript for interactivity (if needed)
-- Self-contained single HTML file
-- Production-ready code (not prototypes or wireframes)
-
-# CONTENT GUIDELINES
-- Extract real content from user's prompt
-- If they mention "barbershop" → use real barbershop names, services, prices
-- If they mention "SaaS" → use appropriate SaaS terminology and features
-- Create believable, contextual content - not generic placeholders
-- Use images when they enhance the design (Unsplash URLs: https://images.unsplash.com/photo-[ID]?auto=format&fit=crop&w=1600&q=80)
-
-# OUTPUT EXPECTATIONS
-- Complete, functional designs that work immediately when opened in a browser
-- Professional quality that could be used in production
-- Proper structure and organization
-- Attention to detail in styling and interactions
-`;
-
-// export const config = { runtime: 'edge' }; // Disabled to allow longer timeouts with Node.js runtime
-
-export default async function handler(request) {
-    if (request.method === 'OPTIONS') {
-        return new Response(null, { status: 200, headers: corsHeaders() });
+export default async function handler(req, res) {
+    // Handle CORS preflight
+    if (req.method === 'OPTIONS') {
+        res.status(200).set(corsHeaders()).end();
+        return;
     }
 
+    // Set CORS headers for all responses
+    Object.entries(corsHeaders()).forEach(([key, value]) => {
+        res.setHeader(key, value);
+    });
+
     try {
-        const user = await requireAuth(request);
-        const body = await getRequestBody(request);
-        const { prompt, design_type = "component", fidelity = "high" } = body;
-
-        if (!prompt) {
-            throw { status: 400, message: "Missing 'prompt' field" };
-        }
-
-        const { hasCredits } = await checkSufficientCredits(user.id, 1.0);
-        if (!hasCredits) {
-            throw { status: 402, message: "Insufficient credits" };
-        }
-
-        // Construct the Super Prompt with explicit quality requirements
-        const aiPrompt = `
-${CONST_GENERIC_DESIGN_DIRECTIVE}
-
-# TASK: CREATE A PROFESSIONAL DESIGN
-
-**User's Request**: "${prompt}"
-**Design Type**: ${design_type}
-**Fidelity Level**: ${fidelity}
-
-# YOUR MISSION
-Create a COMPLETE, PROFESSIONAL design that EXACTLY fulfills the user's request above.
-
-**CRITICAL REQUIREMENTS**:
-1. Read the user's prompt carefully and create EXACTLY what they asked for
-2. If they asked for a dashboard → build a FULL dashboard (not just one card)
-3. If they asked for a landing page → build a COMPLETE landing page (not just hero)
-4. If they asked for animations → include actual CSS/JS animations
-5. Make it PRODUCTION-READY - polished, complete, beautiful
-6. Use real content inferred from the prompt - no placeholders like "[NOME]" or "XX,XX"
-7. Take your time - create something you'd be proud to show a client
-
-# OUTPUT FORMAT
-Respond ONLY with valid JSON (no markdown, no \`\`\`json wrapper).
-
-{
-    "explanation": "Brief 1-sentence explanation of what you created",
-    "html": "<!DOCTYPE html>... complete HTML string with Tailwind CDN and any <script> needed ...",
-    "css": "",
-    "component_count": 1
-}
-
-# CODE REQUIREMENTS
-- Single self-contained HTML file
-- Tailwind CDN: <script src="https://cdn.tailwindcss.com"></script>
-- GSAP for animations if needed: <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-- No React/Vue - pure HTML + Tailwind + vanilla JS only
-- Complete, working code that opens perfectly in a browser
-- **OPTIMIZE FOR SIZE**: Use concise class names, avoid repetitive code, keep HTML clean and minimal
-- **TOKEN LIMIT**: Your response must be under 4000 tokens. Be efficient with code structure.
-
-# REMEMBER
-Quality over speed. Create something professional and complete. The user is counting on you to deliver exactly what they asked for.
-**IMPORTANT**: Keep the code concise and optimized to stay within token limits.
-`;
-
-        const model = await getGeminiModel();
-
-        // Configure generation for quality and completeness
-        // Use generateContent with config for better quality output
-        const generationConfig = {
-            temperature: 0.7, // Balanced creativity vs consistency
-            topP: 0.95,
-            topK: 40,
-            maxOutputTokens: 4096, // Reduced to stay within Gemini's 16K output limit
-        };
-
-        // Create a new model instance with generation config
-        const { GoogleGenerativeAI } = await import('@google/generative-ai');
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY?.trim());
-        const configuredModel = genAI.getGenerativeModel({
-            model: "gemini-2.0-flash-exp",
-            generationConfig: generationConfig
-        });
-
-        let result, response, text;
-        try {
-            result = await configuredModel.generateContent(aiPrompt);
-            response = await result.response;
-            text = response.text();
-        } catch (genError) {
-            console.error("Gemini Generation Error:", genError);
-            // Check if it's a token limit error
-            if (genError.message?.includes('max tokens') || genError.message?.includes('token limit')) {
-                throw {
-                    status: 400,
-                    message: "O prompt é muito complexo. Tente simplificar a descrição ou divida em partes menores."
-                };
-            }
-            throw {
-                status: 500,
-                message: `Erro ao gerar design: ${genError.message || 'Erro desconhecido'}`
-            };
-        }
-
-        text = text.replace(/```json/g, '').replace(/```/g, '').trim();
-        const jsonStart = text.indexOf('{');
-        const jsonEnd = text.lastIndexOf('}');
-
-        let designResult;
-        try {
-            if (jsonStart > -1 && jsonEnd > -1) {
-                designResult = JSON.parse(text.substring(jsonStart, jsonEnd + 1));
-            } else {
-                throw new Error('No JSON found in response');
-            }
-        } catch (parseError) {
-            console.error("JSON Parse Error:", parseError, "Raw Text:", text);
-            designResult = {
-                html: `<div style="color:red; pad:20px;"><h1>Generation Error</h1><p>Sorry, the AI brain malfunctioned. Please try again.</p><pre>${parseError.message}</pre></div>`,
-                css: "",
-                component_count: 0,
-                explanation: "Parsing failure fallback."
-            };
-        }
-
-        // Token/Cost Calculation
-        const tokensIn = Math.ceil(aiPrompt.length / 4);
-        const tokensOut = Math.ceil(text.length / 4);
-        const fidelityMult = { "wireframe": 0.5, "medium": 1.0, "high": 2.0 }[fidelity] || 1.0;
-        const creditCost = 0.5 * fidelityMult;
-
-        const { remaining } = await deductCredits(
-            user.id, creditCost, 'design_job', `Design: ${prompt.substring(0, 20)}`, tokensIn, tokensOut
-        );
+        // 1. Auth & Credits Check (Fast)
+        const token = req.headers.authorization?.split(' ')[1];
+        if (!token) throw { status: 401, message: "Unauthorized" };
 
         const supabase = await getSupabase();
-        const jobId = uuidv4();
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
-        const jobData = {
-            job_id: jobId,
-            user_id: user.id,
-            status: "complete",
-            html: designResult.html,
-            css: designResult.css || "", // CSS is embedded in HTML now, but keeping field for schema compat
-            component_count: designResult.component_count || 1,
-            prompt: prompt,
-            tokens_input: tokensIn,
-            tokens_output: tokensOut,
-            credits_used: creditCost,
-            credits_remaining: remaining,
-            created_at: new Date().toISOString()
-        };
+        if (authError || !user) throw { status: 401, message: "Invalid token" };
 
-        try {
-            await supabase.from('design_jobs').insert(jobData);
-        } catch (dbErr) {
-            console.error("Failed to save design job:", dbErr);
+        const body = req.body; // Vercel parses JSON body auto
+        const { prompt, design_type = "component", fidelity = "high" } = body;
+
+        if (!prompt) throw { status: 400, message: "Missing prompt" };
+
+        // Quick credit check
+        const { hasCredits } = await checkSufficientCredits(user.id, 1.0);
+        if (!hasCredits) throw { status: 402, message: "Insufficient credits" };
+
+        // 2. Setup Headers for Streaming
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8'); // Raw streaming
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+        // Disable simple buffering proxy
+        res.setHeader('X-Accel-Buffering', 'no');
+
+        // 3. Construct Prompt (High Quality Prompt)
+        const systemPrompt = `
+# ROLE
+You are an expert UI/UX designer and front-end engineer.
+Your task is to generate a COMPLETE, PRODUCTION-READY HTML file based on the user's request.
+
+# OUTPUT FORMAT
+You must stream the response as a valid JSON object.
+Structure:
+{
+  "explanation": "Brief summary",
+  "html": "<!DOCTYPE html>...",
+  "css": "ignored (embed in html)"
+}
+
+# REQUIREMENTS
+1. **NO PLACEHOLDERS**. Use real content.
+2. **COMPLETE**. If dashboard, build the sidebar, header, charts (mocked with HTML/CSS).
+3. **SINGLE FILE**. HTML should contain Tailwind CDN.
+4. **QUALITY**. Use beautiful gradients, shadows, whitespace.
+5. **ANIMATIONS**. Use hover effects, transitions.
+6. **CODE STYLE**. Clean, readable HTML5 + Tailwind.
+
+User Request: "${prompt}"
+Design Type: ${design_type}
+`;
+
+        // 4. Init Gemini with Streaming
+        const { GoogleGenerativeAI } = await import('@google/generative-ai');
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY?.trim());
+        const model = genAI.getGenerativeModel({
+            model: "gemini-2.0-flash-exp",
+            generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 8192, // High limit allowed by streaming
+            }
+        });
+
+        const result = await model.generateContentStream(systemPrompt);
+
+        // 5. Stream chunks
+        let fullText = '';
+
+        for await (const chunk of result.stream) {
+            const chunkText = chunk.text();
+            fullText += chunkText;
+            // Send chunk to client
+            res.write(chunkText);
         }
 
-        return createResponse(jobData);
+        // 6. Async: Deduct credits & Log to DB (After stream ends)
+        try {
+            const cleanJson = fullText.replace(/```json/g, '').replace(/```/g, '').trim();
+            const jsonStart = cleanJson.indexOf('{');
+            const jsonEnd = cleanJson.lastIndexOf('}');
 
-    } catch (err) {
-        return createErrorResponse(err);
+            if (jsonStart > -1 && jsonEnd > -1) {
+                const designData = JSON.parse(cleanJson.substring(jsonStart, jsonEnd + 1));
+
+                const tokensIn = Math.ceil(systemPrompt.length / 4);
+                const tokensOut = Math.ceil(fullText.length / 4);
+
+                await deductCredits(user.id, 0.5, 'design_job', `Design: ${prompt.substring(0, 20)}`, tokensIn, tokensOut);
+
+                await supabase.from('design_jobs').insert({
+                    job_id: uuidv4(),
+                    user_id: user.id,
+                    status: "complete",
+                    html: designData.html,
+                    css: "",
+                    prompt: prompt,
+                    credits_used: 0.5,
+                    tokens_input: tokensIn,
+                    tokens_output: tokensOut,
+                    created_at: new Date().toISOString()
+                });
+            }
+        } catch (postProcessErr) {
+            console.error("Post-processing error:", postProcessErr);
+        }
+
+        res.end();
+
+    } catch (error) {
+        console.error("Stream Error:", error);
+        if (!res.headersSent) {
+            res.status(error.status || 500).json({
+                error: error.message || "Internal Server Error"
+            });
+        } else {
+            res.end();
+        }
     }
 }
