@@ -42,6 +42,7 @@ export default async function handler(request) {
         let userId = null;
 
         if (userEmail) {
+            // Try profiles table first
             const { data: userProfile } = await supabase
                 .from('profiles')
                 .select('id')
@@ -51,7 +52,20 @@ export default async function handler(request) {
             if (userProfile) {
                 userId = userProfile.id;
             } else {
-                console.warn(`[PerfectPay] User not found for email: ${userEmail}`);
+                // Fallback: Search auth.users by email using admin client
+                const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+
+                if (!authError && authUsers?.users) {
+                    const foundUser = authUsers.users.find(u => u.email === userEmail);
+                    if (foundUser) {
+                        userId = foundUser.id;
+                        console.log(`[PerfectPay] Found user in auth.users: ${userId}`);
+                    }
+                }
+
+                if (!userId) {
+                    console.warn(`[PerfectPay] User not found for email: ${userEmail}`);
+                }
             }
         }
 
