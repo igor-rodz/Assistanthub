@@ -43,14 +43,18 @@ export default async function handler(request) {
 
         if (userEmail) {
             // Search profiles with case-insensitive email match
-            const { data: userProfile } = await supabase
+            const { data: userProfiles, error: lookupError } = await supabase
                 .from('profiles')
                 .select('id')
                 .ilike('email', userEmail)
-                .single();
+                .limit(1);
 
-            if (userProfile) {
-                userId = userProfile.id;
+            if (lookupError) {
+                console.error(`[PerfectPay] Lookup error:`, lookupError);
+            }
+
+            if (userProfiles && userProfiles.length > 0) {
+                userId = userProfiles[0].id;
                 console.log(`[PerfectPay] Found user: ${userId}`);
             } else {
                 console.warn(`[PerfectPay] User not found for email: ${userEmail}`);
