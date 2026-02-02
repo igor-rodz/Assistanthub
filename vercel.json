@@ -3,6 +3,10 @@
   "outputDirectory": "frontend/build",
   "rewrites": [
     {
+      "source": "/api/webhooks/:path*",
+      "destination": "/api/webhooks/:path*"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/$1"
     },
