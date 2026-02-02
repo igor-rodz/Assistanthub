@@ -21,27 +21,22 @@ const SubscriptionView = ({ credits, onUpgrade }) => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                {/* Plan Cards */}
+            <div className="grid grid-cols-1 max-w-lg mx-auto">
                 <PlanCard
-                    title="Starter"
-                    price="19,90"
-                    credits="500"
-                    features={['OneShot Fixes', 'Scripts Premium']}
-                    missing={[]}
-                    isActive={currentPlan === 'starter'}
-                    onSelect={() => onUpgrade('starter')}
-                    color="zinc"
-                />
-
-                <PlanCard
-                    title="Pro"
+                    title="Acesso Total"
                     price="29,90"
                     credits="1.000"
-                    features={['OneShot Fixes', 'Scripts Premium', 'Suporte Prioritário']}
+                    features={[
+                        '1.000 Créditos Mensais',
+                        'Acesso Total ao One-Shot Fixes',
+                        'Scripts Premium Ilimitados',
+                        'Suporte Prioritário',
+                        'Atualizações Antecipadas',
+                        'Acesso Vitalício ao Hub'
+                    ]}
                     missing={[]}
-                    isActive={currentPlan === 'pro'}
-                    onSelect={() => onUpgrade('pro')}
+                    isActive={true} // Single plan is always the target/active context visually
+                    onSelect={() => window.open('https://perfectpay.com.br/checkout/SEU_LINK_AQUI', '_blank')}
                     color="purple"
                     isPopular
                 />
