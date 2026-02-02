@@ -42,30 +42,18 @@ export default async function handler(request) {
         let userId = null;
 
         if (userEmail) {
-            // Try profiles table first
+            // Search profiles with case-insensitive email match
             const { data: userProfile } = await supabase
                 .from('profiles')
                 .select('id')
-                .eq('email', userEmail)
+                .ilike('email', userEmail)
                 .single();
 
             if (userProfile) {
                 userId = userProfile.id;
+                console.log(`[PerfectPay] Found user: ${userId}`);
             } else {
-                // Fallback: Search auth.users by email using admin client
-                const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-
-                if (!authError && authUsers?.users) {
-                    const foundUser = authUsers.users.find(u => u.email === userEmail);
-                    if (foundUser) {
-                        userId = foundUser.id;
-                        console.log(`[PerfectPay] Found user in auth.users: ${userId}`);
-                    }
-                }
-
-                if (!userId) {
-                    console.warn(`[PerfectPay] User not found for email: ${userEmail}`);
-                }
+                console.warn(`[PerfectPay] User not found for email: ${userEmail}`);
             }
         }
 
