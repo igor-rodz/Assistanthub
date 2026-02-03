@@ -58,7 +58,7 @@ export async function getGeminiModel() {
         }
 
         const genAI = new GoogleGenerativeAI(key);
-        geminiModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+        geminiModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     }
     return geminiModel;
 }
@@ -168,35 +168,97 @@ export function createErrorResponse(error, defaultStatus = 500) {
     });
 }
 
-// --- CREDITS (Simplified) ---
+// --- CREDITS (Fixed - Actually deducts now!) ---
 
-export async function checkSufficientCredits() {
-    return { hasCredits: true, balance: 9999 };
+export async function checkSufficientCredits(userId, cost) {
+    const supabase = await getSupabase(true); // Admin to bypass RLS
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('credit_balance')
+        .eq('id', userId)
+        .single();
+
+    if (!profile) return { hasCredits: false, balance: 0 };
+
+    const balance = profile.credit_balance || 0;
+    return {
+        hasCredits: balance >= cost,
+        balance: balance
+    };
 }
 
 export async function deductCredits(userId, amount, tool, summary, tokensIn, tokensOut) {
     try {
-        const supabase = await getSupabase(true); // Usage logs might be admin owned? No profiles.
-        // Usually writing to logs is allowed by RLS for user own logs.
-        // Stick to normal client for deductCredits unless we change it.
-        // Keeping getSupabase() for user initiated actions is safer for RLS enforcing ownership.
+        const supabase = await getSupabase(true); // Admin to bypass RLS
 
-        await Promise.allSettled([
-            supabase.from('credit_usage_logs').insert({
-                id: uuidv4(),
-                user_id: userId,
-                tool_used: tool,
-                credits_debited: amount,
-                tokens_input: tokensIn,
-                tokens_output: tokensOut,
-                total_tokens: tokensIn + tokensOut,
-                created_at: new Date().toISOString()
-            })
-        ]);
+        // 1. Get current balance
+        const { data: profile, error: fetchError } = await supabase
+            .from('profiles')
+            .select('credit_balance')
+            .eq('id', userId)
+            .single();
 
-        return { used: amount, remaining: 9999 };
+        if (fetchError) {
+            console.error('[deductCredits] Error fetching profile:', fetchError.message);
+            return { used: amount, remaining: 0 };
+        }
+
+        const currentBalance = profile?.credit_balance || 0;
+        const newBalance = Math.max(0, currentBalance - amount);
+
+        // 2. Update balance in profiles table
+        const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ credit_balance: newBalance })
+            .eq('id', userId);
+
+        if (updateError) {
+            console.error('[deductCredits] Error updating balance:', updateError.message);
+            return { used: amount, remaining: currentBalance };
+        }
+
+        // 3. Log the usage
+        await supabase.from('credit_usage_logs').insert({
+            id: uuidv4(),
+            user_id: userId,
+            tool_used: tool,
+            summary: summary,
+            credits_debited: amount,
+            tokens_input: tokensIn,
+            tokens_output: tokensOut,
+            total_tokens: tokensIn + tokensOut,
+            balance_before: currentBalance,
+            balance_after: newBalance,
+            created_at: new Date().toISOString()
+        });
+
+        console.log(`[deductCredits] User ${userId}: ${currentBalance} -> ${newBalance} (-${amount})`);
+
+        return { used: amount, remaining: newBalance };
     } catch (err) {
-        console.error('[deductCredits]:', err.message);
-        return { used: amount, remaining: 9999 };
+        console.error('[deductCredits] Unexpected error:', err.message);
+        return { used: amount, remaining: 0 };
     }
 }
+
+// Calculate dynamic cost based on tokens (Fixed Base 6.5 + Variable)
+export function calculateCreditCost(tokensIn, tokensOut, hasImage = false) {
+    const totalTokens = tokensIn + tokensOut;
+
+    // Variable cost: 1 credit per 1000 tokens
+    const tokenCost = totalTokens / 1000;
+
+    // Image cost: 0.5 per image
+    const imageCost = hasImage ? 0.5 : 0;
+
+    // Fixed Base Cost
+    const baseCost = 6.50;
+
+    // Total = Fixed Base + Variable (Tokens + Image)
+    // Example: 6.50 + 4.00 = 10.50
+    const finalCost = baseCost + tokenCost + imageCost;
+
+    // Round to 2 decimal places
+    return Math.round(finalCost * 100) / 100;
+}
+

@@ -11,14 +11,17 @@ import analyzeError from './analyze-error.js';
 import metrics from './dashboard/metrics.js';
 import tools from './dashboard/tools.js';
 import user from './dashboard/user.js';
-import create from './design-lab/create.js';
+
 import adminUsers from './admin/users.js';
 import adminDashboardStats from './admin/dashboard/stats.js';
 import adminCreditsTransactions from './admin/credits/transactions.js';
 import adminUsageLogs from './admin/usage-logs.js';
-import adminScripts from './admin/scripts/index.js';
-import userScripts from './scripts/index.js';
+// import adminScripts from './admin/scripts/index.js';
+// import userScripts from './scripts/index.js';
 import creditsBalance from './credits/balance.js';
+import creditsUsage from './credits/usage.js';
+import creditsHistory from './credits/history.js';
+import setPlan from './credits/set-plan.js';
 
 const app = express();
 const PORT = 8000;
@@ -83,14 +86,12 @@ app.all('/api/admin/users', adapt(adminUsers));
 app.all('/api/admin/dashboard/stats', adapt(adminDashboardStats));
 app.all('/api/admin/credits/transactions', adapt(adminCreditsTransactions));
 app.all('/api/admin/usage-logs', adapt(adminUsageLogs));
-app.all('/api/admin/scripts', adapt(adminScripts));
-
-// Scripts (User)
-app.all('/api/scripts', adapt(userScripts));
+// app.all('/api/admin/scripts', adapt(adminScripts));
+// app.all('/api/scripts', adapt(userScripts));
 app.all('/api/credits/balance', adapt(creditsBalance));
-
-// Design Lab
-app.all('/api/design-lab/create', adapt(create));
+app.all('/api/credits/usage', adapt(creditsUsage));
+app.all('/api/credits/history', adapt(creditsHistory));
+app.all('/api/credits/set-plan', adapt(setPlan));
 
 // 404
 app.use((req, res) => {

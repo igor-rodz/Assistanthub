@@ -1,80 +1,85 @@
 import React from 'react';
-import { Zap, Shield, Clock, Code2, Lightbulb, Infinity } from 'lucide-react';
+import { Zap, Shield, Code2, Headphones, Infinity, Lightbulb } from 'lucide-react';
 
 const BenefitsSection = () => {
-    const benefits = [
-        {
-            icon: <Zap className="w-6 h-6" />,
-            title: 'Respostas Instantâneas',
-            description: 'Correções em menos de 5 segundos. Sem esperar, sem filas.',
-        },
-        {
-            icon: <Lightbulb className="w-6 h-6" />,
-            title: 'Explicações Claras',
-            description: 'Não só corrige, mas explica o porquê. Você aprende enquanto resolve.',
-        },
-        {
-            icon: <Code2 className="w-6 h-6" />,
-            title: 'Todas as Linguagens',
-            description: 'JavaScript, Python, PHP, Java, C#, Go, Rust, e mais 50+ linguagens.',
-        },
-        {
-            icon: <Shield className="w-6 h-6" />,
-            title: 'Código Privado',
-            description: 'Seu código nunca é armazenado. Processamos e descartamos.',
-        },
-        {
-            icon: <Clock className="w-6 h-6" />,
-            title: 'Disponível 24/7',
-            description: 'Às 3h da manhã com deadline? A IA tá acordada.',
-        },
-        {
-            icon: <Infinity className="w-6 h-6" />,
-            title: '1000 Créditos/Mês',
-            description: 'Correções suficientes para resolver tudo que aparecer.',
-        },
-    ];
-
     return (
         <section className="relative py-24 px-6 bg-black overflow-hidden">
+            {/* Background Texture */}
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px] opacity-20" />
+
             <div className="max-w-6xl mx-auto relative z-10">
                 {/* Header */}
                 <div className="text-center mb-16">
-                    <span className="inline-block px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white/60 text-sm font-medium mb-6">
-                        Benefícios
-                    </span>
-                    <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-                        Por que devs escolhem{' '}
+                    <h2 className="text-4xl md:text-5xl font-black text-white mb-6">
+                        Menos enrolação.
+                        <br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
-                            One-Shot Fixes
+                            Mais código rodando.
                         </span>
                     </h2>
-                    <p className="text-lg text-zinc-400 max-w-xl mx-auto">
-                        Projetado por devs, para devs. Cada feature pensada para sua produtividade.
-                    </p>
                 </div>
 
-                {/* Benefits grid */}
+                {/* Grid - Rounded & Clean */}
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {benefits.map((benefit, index) => (
-                        <div
-                            key={index}
-                            className="group p-6 rounded-2xl bg-zinc-900/50 border border-white/5 hover:border-emerald-500/30 transition-all duration-300 hover:-translate-y-1"
-                        >
-                            <div className="inline-flex p-3 rounded-xl bg-emerald-500/10 text-emerald-400 mb-4 group-hover:bg-emerald-500/20 transition-colors">
-                                {benefit.icon}
-                            </div>
-                            <h3 className="text-xl font-semibold text-white mb-2">
-                                {benefit.title}
-                            </h3>
-                            <p className="text-zinc-400">
-                                {benefit.description}
-                            </p>
-                        </div>
-                    ))}
+                    <BenefitCard
+                        icon={<Zap className="w-6 h-6" />}
+                        title="Respostas em 5s"
+                        desc="Sem fila, sem espera. Colou, a IA resolveu."
+                        accent="emerald"
+                    />
+                    <BenefitCard
+                        icon={<Lightbulb className="w-6 h-6" />}
+                        title="Correção + Explicação"
+                        desc="Não é só 'arrumar'. A gente mostra onde você errou."
+                        accent="cyan"
+                    />
+                    <BenefitCard
+                        icon={<Code2 className="w-6 h-6" />}
+                        title="Qualquer Linguagem"
+                        desc="JS, Python, PHP, Rust... Se tem código, a gente corrige."
+                        accent="purple"
+                    />
+                    <BenefitCard
+                        icon={<Shield className="w-6 h-6" />}
+                        title="Código Privado"
+                        desc="Seu código é processado e descartado. Zero log."
+                        accent="emerald"
+                    />
+                    <BenefitCard
+                        icon={<Headphones className="w-6 h-6" />}
+                        title="Suporte 24/7"
+                        desc="São 3 da manhã? A IA tá acordada pra te salvar."
+                        accent="cyan"
+                    />
+                    <BenefitCard
+                        icon={<Infinity className="w-6 h-6" />}
+                        title="700 Créditos"
+                        desc="Suficiente pra corrigir bug o mês inteiro."
+                        accent="purple"
+                    />
                 </div>
             </div>
         </section>
+    );
+};
+
+const BenefitCard = ({ icon, title, desc, accent }) => {
+    const accents = {
+        emerald: 'text-emerald-400 bg-emerald-500/10 group-hover:bg-emerald-500',
+        cyan: 'text-cyan-400 bg-cyan-500/10 group-hover:bg-cyan-500',
+        purple: 'text-purple-400 bg-purple-500/10 group-hover:bg-purple-500',
+    };
+
+    return (
+        <div className="group p-6 rounded-[2rem] bg-zinc-900/80 border border-white/5 hover:border-white/20 transition-all duration-300 hover:-translate-y-1">
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${accents[accent]} group-hover:text-black transition-colors duration-300`}>
+                {icon}
+            </div>
+            <h3 className="text-lg font-bold text-white mb-2">{title}</h3>
+            <p className="text-zinc-400 text-sm leading-relaxed">
+                {desc}
+            </p>
+        </div>
     );
 };
 

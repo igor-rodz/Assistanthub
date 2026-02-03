@@ -80,6 +80,10 @@ module.exports = {
 				"pulse-slow": {
 					'0%, 100%': { transform: 'translateX(-100%)' },
 					'50%': { transform: 'translateX(100%)' },
+				},
+				"infinite-scroll": {
+					from: { transform: 'translateX(0)' },
+					to: { transform: 'translateX(-100%)' },
 				}
 			},
 			animation: {
@@ -88,7 +92,8 @@ module.exports = {
 				'shimmer-slide': 'shimmer-slide var(--speed) ease-in-out infinite alternate',
 				'spin-around': 'spin-around calc(var(--speed) * 2) infinite linear',
 				'meteor-effect': 'meteor 5s linear infinite',
-				"pulse-slow": "pulse-slow 3s ease-in-out infinite"
+				"pulse-slow": "pulse-slow 3s ease-in-out infinite",
+				"infinite-scroll": "infinite-scroll 100s linear infinite",
 			}
 		}
 	},

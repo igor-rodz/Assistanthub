@@ -10,7 +10,7 @@ import SettingsScreen from "@/components/Settings";
 import { AdminLayout, AdminDashboard, AdminUsers, AdminCredits, AdminUsageLogs } from "@/components/admin";
 import Layout from "@/components/Layout";
 import { AiLoader } from "@/components/ui/ai-loader";
-import LandingPage from "@/components/LandingPage";
+import LandingPageV2 from "@/components/LandingPageV2";
 import Login from "@/components/auth/Login";
 import Register from "@/components/auth/Register";
 import { supabase } from "@/lib/supabaseClient";
@@ -68,10 +68,35 @@ const DashboardPage = () => {
     try {
       console.log('[OneShotFix] Enviando log de erro para análise...');
 
-      const response = await api.post('/analyze-error', {
+      // Prepare request data
+      const requestData = {
         error_log: data.errorLog,
         tags: data.tags
-      });
+      };
+
+      // If image is provided, convert to base64
+      if (data.image) {
+        console.log('[OneShotFix] Processando imagem...');
+        setLoadingStatus('Processando imagem...');
+
+        const base64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            // Extract base64 data without the data URL prefix
+            const base64Data = reader.result.split(',')[1];
+            resolve(base64Data);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(data.image);
+        });
+
+        requestData.image = {
+          data: base64,
+          mimeType: data.image.type
+        };
+      }
+
+      const response = await api.post('/analyze-error', requestData);
 
       console.log('[OneShotFix] Análise concluída:', response.data);
       setAnalysisResult(response.data);
@@ -236,7 +261,7 @@ const Logo = () => {
         animate={{ opacity: 1 }}
         className="font-medium text-white whitespace-pre"
       >
-        AI Assistant Hub
+        Assistant Hub
       </motion.span>
     </Link>
   );
@@ -247,7 +272,7 @@ function App() {
     <div className="App dark">
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<LandingPage />} />
+          <Route path="/" element={<LandingPageV2 />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 

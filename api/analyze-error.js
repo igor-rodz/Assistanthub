@@ -3,6 +3,7 @@ import {
     requireAuth,
     checkSufficientCredits,
     deductCredits,
+    calculateCreditCost,
     uuidv4,
     getRequestBody,
     createResponse,
@@ -10,8 +11,9 @@ import {
     corsHeaders,
     generateWithRetry
 } from './_helpers.js';
+import { getAgentContext, getSkillContext, routeError } from './_agent-loader.js';
 
-export const config = { runtime: 'edge' };
+export const config = { runtime: 'nodejs' };
 
 export default async function handler(request) {
     if (request.method === 'OPTIONS') {
@@ -21,21 +23,54 @@ export default async function handler(request) {
     try {
         const user = await requireAuth(request);
         const body = await getRequestBody(request);
-        const { error_log, tags = [] } = body;
+        const { error_log, tags = [], image } = body;
 
-        if (!error_log) {
-            throw { status: 400, message: "Missing 'error_log' field" };
+        // Require at least error_log OR image
+        if (!error_log && !image) {
+            throw { status: 400, message: "Missing 'error_log' or 'image' field" };
         }
 
-        const { hasCredits } = await checkSufficientCredits(user.id, 0.5);
+        // Pre-check: minimum cost is 6.5 credits base
+        const minCost = 6.5;
+        const { hasCredits, balance } = await checkSufficientCredits(user.id, minCost);
         if (!hasCredits) {
-            throw { status: 402, message: "Insufficient credits" };
+            throw {
+                status: 402,
+                message: `Créditos insuficientes. Você tem ${balance.toFixed(2)} créditos, mas precisa de pelo menos ${minCost} créditos.`
+            };
         }
 
-        const prompt = `
-Você é um assistente de debugging. Analise este erro:
+        // Agent Routing & Context Loading
+        const { agent, skills } = routeError(error_log || '', tags);
+        const agentContext = await getAgentContext(agent);
 
-LOG: ${error_log.substring(0, 5000)}
+        let skillsContext = '';
+        for (const skill of skills) {
+            const content = await getSkillContext(skill);
+            if (content) skillsContext += `\n\n--- SKILL: ${skill} ---\n${content}`;
+        }
+
+        // Build prompt based on input type
+        let inputDescription = '';
+        if (error_log && image) {
+            inputDescription = 'O usuário enviou um log de erro E uma imagem/screenshot. Analise AMBOS.';
+        } else if (image) {
+            inputDescription = 'O usuário enviou uma imagem/screenshot de um erro. Analise a imagem.';
+        } else {
+            inputDescription = 'O usuário enviou um log de erro em texto.';
+        }
+
+        const promptText = `
+[SYSTEM ROLE]
+${agentContext || "Você é um assistente de debugging especialista."}
+
+[KNOWLEDGE BASE]
+${skillsContext}
+
+[INSTRUCTIONS]
+${inputDescription}
+Analise este erro com base no seu papel e conhecimentos acima.
+${error_log ? `LOG: ${error_log.substring(0, 5000)}` : ''}
 TAGS: ${tags.join(', ')}
 
 Responda APENAS JSON válido (sem markdown):
@@ -49,7 +84,25 @@ Responda APENAS JSON válido (sem markdown):
 }`;
 
         const model = await getGeminiModel();
-        const result = await generateWithRetry(model, prompt);
+
+        let result;
+
+        // If image is provided, use multimodal generation
+        if (image && image.data && image.mimeType) {
+            console.log('[analyze-error] Processing with image:', image.mimeType);
+
+            const imagePart = {
+                inlineData: {
+                    data: image.data,
+                    mimeType: image.mimeType
+                }
+            };
+
+            result = await generateWithRetry(model, [promptText, imagePart]);
+        } else {
+            result = await generateWithRetry(model, promptText);
+        }
+
         const response = await result.response;
         let text = response.text();
 
@@ -76,19 +129,57 @@ Responda APENAS JSON válido (sem markdown):
             };
         }
 
-        const tokensIn = Math.ceil(prompt.length / 4);
+        // Calculate tokens (estimate image as ~258 tokens per image)
+        const tokensIn = Math.ceil(promptText.length / 4) + (image ? 258 : 0);
         const tokensOut = Math.ceil(text.length / 4);
+
+        // Dynamic cost: min 5 credits + 30% margin = min 6.5 credits
+        const creditsToDeduct = calculateCreditCost(tokensIn, tokensOut, !!image);
+
         const { remaining } = await deductCredits(
-            user.id, 1.0, 'oneshot_fixes', 'Error Analysis', tokensIn, tokensOut
+            user.id,
+            creditsToDeduct,
+            'oneshot_fixes',
+            image ? 'Error Analysis (with image)' : 'Error Analysis',
+            tokensIn,
+            tokensOut
         );
+
+        // [NEW] Save detailed history to 'analysis_history' table
+        try {
+            const supabase = await getSupabase(true); // Admin client
+            await supabase.from('analysis_history').insert({
+                user_id: user.id,
+                prompt_content: error_log || (image ? '[Image Only Error]' : '[No Content]'),
+                full_log: error_log, // Store full log if available
+                analysis_result: analysis, // Store the JSON result
+                metadata: {
+                    tokens_input: tokensIn,
+                    tokens_output: tokensOut,
+                    model: 'gemini-2.5-flash',
+                    credits_cost: creditsToDeduct,
+                    tags: tags,
+                    has_image: !!image
+                }
+            });
+            console.log('[analyze-error] History saved successfully');
+        } catch (histError) {
+            console.error('[analyze-error] Failed to save history:', histError);
+            // Non-blocking error
+        }
 
         return createResponse({
             id: uuidv4(),
             log_id: `#${Date.now().toString(36).toUpperCase()}`,
-            timestamp: new Date().toLocaleString(),
+            timestamp: new Date().toLocaleString('pt-BR'),
             ...analysis,
-            credits_used: 1.0,
-            credits_remaining: remaining
+            tokens_input: tokensIn,
+            tokens_output: tokensOut,
+            tokens_total: tokensIn + tokensOut,
+            credits_used: creditsToDeduct,
+            credits_remaining: remaining,
+            had_image: !!image,
+            processing_time: '~2s'
         });
 
     } catch (err) {

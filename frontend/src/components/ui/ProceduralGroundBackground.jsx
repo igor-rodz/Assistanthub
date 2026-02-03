@@ -6,23 +6,23 @@ import React, { useEffect, useRef } from 'react';
  * Optimized for performance using fragment shaders.
  */
 const ProceduralGroundBackground = () => {
-    const canvasRef = useRef(null);
+  const canvasRef = useRef(null);
 
-    useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
-        const gl = canvas.getContext('webgl');
-        if (!gl) return;
+    const gl = canvas.getContext('webgl');
+    if (!gl) return;
 
-        const vsSource = `
+    const vsSource = `
       attribute vec2 position;
       void main() {
         gl_Position = vec4(position, 0.0, 1.0);
       }
     `;
 
-        const fsSource = `
+    const fsSource = `
       precision highp float;
       uniform float u_time;
       uniform vec2 u_resolution;
@@ -70,64 +70,64 @@ const ProceduralGroundBackground = () => {
       }
     `;
 
-        const createShader = (gl, type, source) => {
-            const shader = gl.createShader(type);
-            gl.shaderSource(shader, source);
-            gl.compileShader(shader);
-            return shader;
-        };
+    const createShader = (gl, type, source) => {
+      const shader = gl.createShader(type);
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+      return shader;
+    };
 
-        const program = gl.createProgram();
-        gl.attachShader(program, createShader(gl, gl.VERTEX_SHADER, vsSource));
-        gl.attachShader(program, createShader(gl, gl.FRAGMENT_SHADER, fsSource));
-        gl.linkProgram(program);
-        gl.useProgram(program);
+    const program = gl.createProgram();
+    gl.attachShader(program, createShader(gl, gl.VERTEX_SHADER, vsSource));
+    gl.attachShader(program, createShader(gl, gl.FRAGMENT_SHADER, fsSource));
+    gl.linkProgram(program);
+    gl.useProgram(program);
 
-        const buffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-            -1, -1, 1, -1, -1, 1,
-            -1, 1, 1, -1, 1, 1
-        ]), gl.STATIC_DRAW);
+    const buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+      -1, -1, 1, -1, -1, 1,
+      -1, 1, 1, -1, 1, 1
+    ]), gl.STATIC_DRAW);
 
-        const posAttrib = gl.getAttribLocation(program, "position");
-        gl.enableVertexAttribArray(posAttrib);
-        gl.vertexAttribPointer(posAttrib, 2, gl.FLOAT, false, 0, 0);
+    const posAttrib = gl.getAttribLocation(program, "position");
+    gl.enableVertexAttribArray(posAttrib);
+    gl.vertexAttribPointer(posAttrib, 2, gl.FLOAT, false, 0, 0);
 
-        const timeLoc = gl.getUniformLocation(program, "u_time");
-        const resLoc = gl.getUniformLocation(program, "u_resolution");
+    const timeLoc = gl.getUniformLocation(program, "u_time");
+    const resLoc = gl.getUniformLocation(program, "u_resolution");
 
-        let animationFrameId;
-        const render = (time) => {
-            const { innerWidth: width, innerHeight: height } = window;
-            if (canvas.width !== width || canvas.height !== height) {
-                canvas.width = width;
-                canvas.height = height;
-                gl.viewport(0, 0, width, height);
-            }
+    let animationFrameId;
+    const render = (time) => {
+      const { innerWidth: width, innerHeight: height } = window;
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+        gl.viewport(0, 0, width, height);
+      }
 
-            gl.uniform1f(timeLoc, time * 0.001);
-            gl.uniform2f(resLoc, width, height);
-            gl.drawArrays(gl.TRIANGLES, 0, 6);
-            animationFrameId = requestAnimationFrame(render);
-        };
+      gl.uniform1f(timeLoc, time * 0.001);
+      gl.uniform2f(resLoc, width, height);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+      animationFrameId = requestAnimationFrame(render);
+    };
 
-        animationFrameId = requestAnimationFrame(render);
+    animationFrameId = requestAnimationFrame(render);
 
-        return () => {
-            cancelAnimationFrame(animationFrameId);
-        };
-    }, []);
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
 
-    return (
-        <div className="absolute inset-0 w-full h-full bg-zinc-950">
-            <canvas
-                ref={canvasRef}
-                className="w-full h-full block touch-none"
-                style={{ filter: 'contrast(1.1) brightness(0.9)' }}
-            />
-        </div>
-    );
+  return (
+    <div className="fixed inset-0 w-full h-full bg-zinc-950 z-0">
+      <canvas
+        ref={canvasRef}
+        className="w-full h-full block touch-none"
+        style={{ filter: 'contrast(1.1) brightness(0.9)' }}
+      />
+    </div>
+  );
 };
 
 export default ProceduralGroundBackground;

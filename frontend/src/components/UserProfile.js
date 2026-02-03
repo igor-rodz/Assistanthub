@@ -29,11 +29,11 @@ const UserProfile = ({ user: initialUser, onBack, onLogout }) => {
   }, [searchParams]);
   const [user, setUser] = useState(initialUser || {});
   const [credits, setCredits] = useState({
-    plan: 'starter',
-    credit_balance: 300,
-    monthly_limit: 300,
+    plan: 'free',
+    credit_balance: 0, // Real value comes from API
+    monthly_limit: 0,
     credits_used: 0,
-    plan_price: 19.90
+    plan_price: 0
   });
   const [usageHistory, setUsageHistory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -63,11 +63,11 @@ const UserProfile = ({ user: initialUser, onBack, onLogout }) => {
         const [userRes, creditsRes, usageRes] = await Promise.all([
           api.get('/dashboard/user'),
           api.get('/credits/balance'),
-          api.get('/credits/usage')
+          api.get('/credits/history')
         ]);
         if (userRes.data) setUser(userRes.data);
         if (creditsRes.data) setCredits(creditsRes.data);
-        if (usageRes.data?.usage_history) setUsageHistory(usageRes.data.usage_history);
+        if (usageRes.data?.history) setUsageHistory(usageRes.data.history);
       } catch (e) {
         console.warn("Backend not available, using default data");
       } finally {

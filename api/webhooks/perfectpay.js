@@ -77,7 +77,7 @@ export default async function handler(request) {
 
         // 4. Handle Status (Enum: 2 = Approved)
         if (parseInt(sale_status_enum) === 2) {
-            const CREDITS_TO_ADD = 1000;
+            const CREDITS_TO_ADD = 700;
             const SUBSCRIPTION_DAYS = 30;
 
             const cleanDate = new Date();

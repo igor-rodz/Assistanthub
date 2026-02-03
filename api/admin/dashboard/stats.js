@@ -24,7 +24,7 @@ export default async function handler(request) {
         const { data: allProfiles } = await supabase.from('profiles').select('plan, credit_balance');
 
         let totalCredits = 0;
-        let planStats = { starter: 0, builder: 0, pro: 0 };
+        let planStats = { free: 0, pro: 0 };
         let activeUsers = allProfiles ? allProfiles.length : 0; // Using visible profiles count
 
         if (allProfiles) {

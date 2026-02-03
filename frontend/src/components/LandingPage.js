@@ -5,7 +5,6 @@ import AnimatedShaderHero from './ui/animated-shader-hero';
 // Landing page sections
 import ProblemSection from './landing/ProblemSection';
 import HowItWorksSection from './landing/HowItWorksSection';
-import DemoSection from './landing/DemoSection';
 import BenefitsSection from './landing/BenefitsSection';
 import PricingSection from './landing/PricingSection';
 import FAQSection from './landing/FAQSection';
@@ -53,7 +52,6 @@ const LandingPage = () => {
             {/* Conversion Sections */}
             <ProblemSection />
             <HowItWorksSection />
-            <DemoSection />
             <BenefitsSection />
             <PricingSection />
             <FAQSection />
@@ -75,4 +73,3 @@ const LandingPage = () => {
 };
 
 export default LandingPage;
-

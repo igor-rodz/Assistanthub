@@ -58,7 +58,7 @@ const AdminLayout = ({ children }) => {
                         <img src="/logo-hub.png" alt="Logo" className="w-10 h-10 rounded-xl shadow-md shadow-orange-500/10" />
                         <div>
                             <h1 className="text-lg font-bold text-white">Admin Panel</h1>
-                            <p className="text-xs text-white/40">Lasy Hub</p>
+                            <p className="text-xs text-white/40">Assistant Hub</p>
                         </div>
                     </div>
                 </div>

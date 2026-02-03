@@ -9,34 +9,76 @@ export default async function handler(request) {
 
     try {
         const user = await requireAuth(request);
-        const supabase = await getSupabase(); // Standard client
+        const supabase = await getSupabase(true); // Admin to bypass RLS
 
-        // Busca perfil para ver plano e saldo (se saldo estiver no perfil)
-        // Se a coluna 'credit_balance' nao existir, assumimos 0
-        // Se a coluna 'plan' nao existir, assumimos starter (ou admin=>pro)
-
-        let { data, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+        // Get profile with credit info
+        let { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
 
         if (error) {
-            // Se perfil não existe ou erro, vamos tentar ser robustos
             console.error("Erro ao ler perfil para creditos:", error);
-            // Retorna padrão
+            // Retorna dados zerados em caso de erro grave (perfil não existe)
             return createResponse({
                 credit_balance: 0,
-                plan: 'starter'
+                plan: 'free',
+                monthly_limit: 50,
+                credits_used: 0
             });
         }
 
-        // Lógica Virtual de Plano para Admin
-        let finalPlan = data.plan || 'starter';
+        // Logic to determine plan if missing or inconsistent with balance
+        let finalPlan = data.plan || 'free';
+
+        // Auto-upgrade visual plan if balance is high but plan says free
+        // This fixes the "50" limit display issue for users with high balance
+        const balance = data.credit_balance || 0;
+        if (finalPlan === 'free' && balance > 60) {
+            if (balance > 500) finalPlan = 'pro';
+            else finalPlan = 'starter';
+        }
+
         if (data.role === 'admin') {
             finalPlan = 'pro';
         }
 
+        // Calculate credits used this month from logs
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+
+        const { data: usageLogs } = await supabase
+            .from('credit_usage_logs')
+            .select('credits_debited')
+            .eq('user_id', user.id)
+            .gte('created_at', startOfMonth.toISOString());
+
+        const creditsUsedThisMonth = (usageLogs || []).reduce(
+            (sum, log) => sum + (log.credits_debited || 0),
+            0
+        );
+
+        // Plan limits
+        const planLimits = {
+            free: 50,
+            starter: 500,
+            pro: 700,
+            enterprise: 5000
+        };
+
+        const monthlyLimit = planLimits[finalPlan] || 700;
+
+        console.log('[credits/balance] DEBUG:', { balance, finalPlan, monthlyLimit, role: data.role });
+
         return createResponse({
-            credit_balance: data.credit_balance || 0,
-            plan: finalPlan, // Retorna 'pro' se for admin, ignorando falta de coluna
-            subscription_status: 'active'
+            credit_balance: balance,
+            plan: finalPlan,
+            subscription_status: 'active',
+            monthly_limit: monthlyLimit,
+            credits_used: Math.round(creditsUsedThisMonth * 100) / 100,
+            last_updated: new Date().toISOString()
         });
 
     } catch (err) {
