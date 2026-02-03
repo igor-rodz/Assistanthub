@@ -13,7 +13,7 @@ import {
 } from './_helpers.js';
 import { getAgentContext, getSkillContext, routeError } from './_agent-loader.js';
 
-export const config = { runtime: 'nodejs' };
+export const config = { runtime: 'nodejs', maxDuration: 60 };
 
 export default async function handler(request) {
     if (request.method === 'OPTIONS') {

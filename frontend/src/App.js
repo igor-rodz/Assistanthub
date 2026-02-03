@@ -158,12 +158,16 @@ const DashboardPage = () => {
         const serverMsg = e.response.data?.error || e.response.data?.message;
         const isQuotaError = e.response.data?.isQuotaError;
 
-        if (e.response.status === 429) {
+        if (e.response.status === 504) {
+          setError('⏱️ Timeout na análise. A imagem pode ser muito grande. Tente novamente ou use apenas texto.');
+        } else if (e.response.status === 429) {
           setError(isQuotaError ? '⚠️ Cota da API de IA excedida.' : 'Muitas requisições. Tente em breve.');
         } else if (e.response.status === 413) {
           setError('Imagem muito grande para envio. Tente novamente com um screenshot menor/mais comprimido.');
         } else {
-          setError(serverMsg || `Erro do servidor: ${e.response.status}`);
+          // Ensure serverMsg is a string
+          const errorMsg = typeof serverMsg === 'string' ? serverMsg : JSON.stringify(serverMsg) || `Erro do servidor: ${e.response.status}`;
+          setError(errorMsg);
         }
       } else {
         setError('Backend indisponível. Verifique a conexão.');
