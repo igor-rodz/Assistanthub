@@ -22,10 +22,13 @@ const Settings = ({ onBack }) => {
         push: false,
         updates: true
     });
+    const [currentPassword, setCurrentPassword] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [activeModal, setActiveModal] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [passwordError, setPasswordError] = useState('');
+    const [passwordSuccess, setPasswordSuccess] = useState(false);
     const navigate = useNavigate();
 
     const tabs = [
@@ -35,21 +38,72 @@ const Settings = ({ onBack }) => {
 
     const handlePasswordChange = async (e) => {
         e.preventDefault();
+        setPasswordError('');
+        setPasswordSuccess(false);
+
+        // Validações
+        if (!currentPassword.trim()) {
+            setPasswordError('Digite sua senha atual');
+            return;
+        }
+
+        if (password.length < 6) {
+            setPasswordError('A nova senha deve ter pelo menos 6 caracteres');
+            return;
+        }
+
         if (password !== confirmPassword) {
-            alert("As senhas não coincidem!");
+            setPasswordError('As senhas não coincidem');
+            return;
+        }
+
+        if (currentPassword === password) {
+            setPasswordError('A nova senha deve ser diferente da atual');
             return;
         }
 
         try {
             setLoading(true);
-            const { error } = await supabase.auth.updateUser({ password });
-            if (error) throw error;
-            alert("Senha atualizada com sucesso!");
-            setActiveModal(null);
+
+            // 1. Re-autenticar com senha atual para verificar
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user?.email) {
+                setPasswordError('Erro ao obter dados do usuário');
+                return;
+            }
+
+            const { error: signInError } = await supabase.auth.signInWithPassword({
+                email: user.email,
+                password: currentPassword
+            });
+
+            if (signInError) {
+                setPasswordError('Senha atual incorreta');
+                return;
+            }
+
+            // 2. Atualizar para nova senha
+            const { error: updateError } = await supabase.auth.updateUser({ password });
+
+            if (updateError) {
+                setPasswordError('Erro ao atualizar senha: ' + updateError.message);
+                return;
+            }
+
+            // Sucesso!
+            setPasswordSuccess(true);
+            setCurrentPassword('');
             setPassword('');
             setConfirmPassword('');
+
+            // Fechar modal após 2 segundos
+            setTimeout(() => {
+                setActiveModal(null);
+                setPasswordSuccess(false);
+            }, 2000);
+
         } catch (error) {
-            alert("Erro ao atualizar senha: " + error.message);
+            setPasswordError('Erro inesperado: ' + error.message);
         } finally {
             setLoading(false);
         }
@@ -95,44 +149,93 @@ const Settings = ({ onBack }) => {
                     {activeModal === 'password' && (
                         <div>
                             <div className="mb-6">
-                                <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center mb-4">
-                                    <Key className="text-purple-400" size={24} />
+                                <div className={`w-12 h-12 rounded-full ${passwordSuccess ? 'bg-green-500/20' : 'bg-purple-500/20'} flex items-center justify-center mb-4`}>
+                                    <Key className={passwordSuccess ? 'text-green-400' : 'text-purple-400'} size={24} />
                                 </div>
-                                <h3 className="text-xl font-bold text-white mb-2">Alterar Senha</h3>
-                                <p className="text-white/60 text-sm">Digite sua nova senha abaixo para confirmar a alteração.</p>
+                                <h3 className="text-xl font-bold text-white mb-2">
+                                    {passwordSuccess ? 'Senha Alterada!' : 'Alterar Senha'}
+                                </h3>
+                                <p className="text-white/60 text-sm">
+                                    {passwordSuccess
+                                        ? 'Sua senha foi atualizada com sucesso.'
+                                        : 'Confirme sua senha atual e defina uma nova senha.'}
+                                </p>
                             </div>
 
-                            <form className="space-y-4" onSubmit={handlePasswordChange}>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-medium text-white/40 uppercase tracking-widest pl-1">Nova Senha</label>
-                                    <input
-                                        type="password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all"
-                                        placeholder="••••••••"
-                                        required
-                                    />
+                            {!passwordSuccess ? (
+                                <form className="space-y-4" onSubmit={handlePasswordChange}>
+                                    {/* Senha Atual */}
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-medium text-white/40 uppercase tracking-widest pl-1">Senha Atual</label>
+                                        <input
+                                            type="password"
+                                            value={currentPassword}
+                                            onChange={(e) => { setCurrentPassword(e.target.value); setPasswordError(''); }}
+                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all"
+                                            placeholder="Digite sua senha atual"
+                                            required
+                                            autoComplete="current-password"
+                                        />
+                                    </div>
+
+                                    <div className="border-t border-white/10 pt-4 mt-4"></div>
+
+                                    {/* Nova Senha */}
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-medium text-white/40 uppercase tracking-widest pl-1">Nova Senha</label>
+                                        <input
+                                            type="password"
+                                            value={password}
+                                            onChange={(e) => { setPassword(e.target.value); setPasswordError(''); }}
+                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all"
+                                            placeholder="Mínimo 6 caracteres"
+                                            required
+                                            autoComplete="new-password"
+                                            minLength={6}
+                                        />
+                                    </div>
+
+                                    {/* Confirmar Nova Senha */}
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-medium text-white/40 uppercase tracking-widest pl-1">Confirmar Nova Senha</label>
+                                        <input
+                                            type="password"
+                                            value={confirmPassword}
+                                            onChange={(e) => { setConfirmPassword(e.target.value); setPasswordError(''); }}
+                                            className={`w-full bg-white/5 border rounded-xl px-4 py-3 text-white focus:outline-none transition-all ${confirmPassword && password !== confirmPassword
+                                                    ? 'border-red-500/50 focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50'
+                                                    : 'border-white/10 focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50'
+                                                }`}
+                                            placeholder="Repita a nova senha"
+                                            required
+                                            autoComplete="new-password"
+                                        />
+                                        {confirmPassword && password !== confirmPassword && (
+                                            <p className="text-red-400 text-xs pl-1">As senhas não coincidem</p>
+                                        )}
+                                    </div>
+
+                                    {/* Mensagem de Erro */}
+                                    {passwordError && (
+                                        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                                            <p className="text-red-400 text-sm">{passwordError}</p>
+                                        </div>
+                                    )}
+
+                                    <button
+                                        type="submit"
+                                        disabled={loading || !currentPassword || !password || !confirmPassword || password !== confirmPassword}
+                                        className="w-full py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-600/50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all mt-4 flex items-center justify-center gap-2"
+                                    >
+                                        {loading ? <Loader2 className="animate-spin" size={20} /> : 'Atualizar Senha'}
+                                    </button>
+                                </form>
+                            ) : (
+                                <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl text-center">
+                                    <p className="text-green-400 font-medium">✓ Senha alterada com sucesso!</p>
+                                    <p className="text-green-400/60 text-sm mt-1">Esta janela fechará automaticamente...</p>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-medium text-white/40 uppercase tracking-widest pl-1">Confirmar Senha</label>
-                                    <input
-                                        type="password"
-                                        value={confirmPassword}
-                                        onChange={(e) => setConfirmPassword(e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all"
-                                        placeholder="••••••••"
-                                        required
-                                    />
-                                </div>
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl transition-all mt-4 flex items-center justify-center gap-2"
-                                >
-                                    {loading ? <Loader2 className="animate-spin" size={20} /> : 'Atualizar Senha'}
-                                </button>
-                            </form>
+                            )}
                         </div>
                     )}
 
