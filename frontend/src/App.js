@@ -17,6 +17,67 @@ import { supabase } from "@/lib/supabaseClient";
 
 // Backend URL is handled in api.js now
 
+const MAX_IMAGE_UPLOAD_BYTES = 1300000;
+const MAX_IMAGE_DIMENSION = 1600;
+
+async function blobToBase64Data(blob) {
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      if (typeof result !== 'string') return reject(new Error('Invalid FileReader result'));
+      const parts = result.split(',');
+      resolve(parts[1] || '');
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function compressImageForUpload(file) {
+  const imageEl = await new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = URL.createObjectURL(file);
+  });
+
+  const srcW = imageEl.naturalWidth || imageEl.width;
+  const srcH = imageEl.naturalHeight || imageEl.height;
+
+  const scale = Math.min(1, MAX_IMAGE_DIMENSION / Math.max(srcW, srcH));
+  const targetW = Math.max(1, Math.round(srcW * scale));
+  const targetH = Math.max(1, Math.round(srcH * scale));
+
+  const canvas = document.createElement('canvas');
+  canvas.width = targetW;
+  canvas.height = targetH;
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas not supported');
+
+  ctx.drawImage(imageEl, 0, 0, targetW, targetH);
+
+  const mimeType = 'image/jpeg';
+  let quality = 0.85;
+  let lastBlob = null;
+
+  while (quality >= 0.45) {
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, mimeType, quality));
+    if (blob && blob.size <= MAX_IMAGE_UPLOAD_BYTES) {
+      lastBlob = blob;
+      break;
+    }
+    if (blob) lastBlob = blob;
+    quality -= 0.1;
+  }
+
+  if (!lastBlob) throw new Error('Failed to encode image');
+
+  const base64 = await blobToBase64Data(lastBlob);
+  return { base64, mimeType, size: lastBlob.size };
+}
+
 // Dashboard Page acts as the One Shot Fixes tool directly
 const DashboardPage = () => {
   const navigate = useNavigate();
@@ -79,21 +140,8 @@ const DashboardPage = () => {
         console.log('[OneShotFix] Processando imagem...');
         setLoadingStatus('Processando imagem...');
 
-        const base64 = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => {
-            // Extract base64 data without the data URL prefix
-            const base64Data = reader.result.split(',')[1];
-            resolve(base64Data);
-          };
-          reader.onerror = reject;
-          reader.readAsDataURL(data.image);
-        });
-
-        requestData.image = {
-          data: base64,
-          mimeType: data.image.type
-        };
+        const { base64, mimeType } = await compressImageForUpload(data.image);
+        requestData.image = { data: base64, mimeType };
       }
 
       const response = await api.post('/analyze-error', requestData);
@@ -112,6 +160,8 @@ const DashboardPage = () => {
 
         if (e.response.status === 429) {
           setError(isQuotaError ? '⚠️ Cota da API de IA excedida.' : 'Muitas requisições. Tente em breve.');
+        } else if (e.response.status === 413) {
+          setError('Imagem muito grande para envio. Tente novamente com um screenshot menor/mais comprimido.');
         } else {
           setError(serverMsg || `Erro do servidor: ${e.response.status}`);
         }

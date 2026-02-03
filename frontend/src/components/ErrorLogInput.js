@@ -116,19 +116,8 @@ const ErrorLogInput = ({ onGenerate, onBack, user, onOpenProfile, error }) => {
     <div className="min-h-screen relative">
       <ProceduralGroundBackground />
 
-      {/* Header */}
-      <header className="relative z-10 flex items-center px-4 sm:px-6 lg:px-8 py-4 max-w-6xl mx-auto">
-        <button
-          onClick={onBack}
-          className="p-2 hover:bg-white/5 rounded-lg transition-colors"
-          title="Voltar ao Dashboard"
-        >
-          <ArrowLeft className="w-5 h-5 text-white/60" />
-        </button>
-      </header>
-
       {/* Main Content */}
-      <main className="relative z-10 max-w-4xl mx-auto px-6 py-2">
+      <main className="relative z-10 max-w-4xl mx-auto px-6 pt-6 pb-2">
         {/* Hero Title */}
         <div className="text-center mb-6">
           <h1 className="text-3xl md:text-4xl font-bold mb-2">

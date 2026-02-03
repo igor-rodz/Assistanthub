@@ -15,6 +15,25 @@ const LandingPageV2 = () => {
     const heroScale = useTransform(scrollY, [0, 500], [1, 0.95]);
     const demoY = useTransform(scrollY, [0, 800], [100, -50]);
 
+    const [isScrolling, setIsScrolling] = useState(false);
+
+    useEffect(() => {
+        let timeout;
+        const handleScroll = () => {
+            setIsScrolling(true);
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                setIsScrolling(false);
+            }, 2200); // Reaparece 2.2s após parar de rolar
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            clearTimeout(timeout);
+        };
+    }, []);
+
     return (
         <div className="min-h-screen bg-black text-white selection:bg-emerald-500/30 selection:text-emerald-200 font-sans overflow-x-hidden">
 
@@ -25,8 +44,11 @@ const LandingPageV2 = () => {
                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay" />
             </div>
 
-            {/* Navbar Floating */}
-            <nav className="fixed top-6 left-0 right-0 z-50 flex justify-center px-6">
+            {/* Navbar Floating - Auto Hide */}
+            <nav
+                className={`fixed top-6 left-0 right-0 z-50 flex justify-center px-6 transition-transform duration-300 ${isScrolling ? '-translate-y-32' : 'translate-y-0'
+                    }`}
+            >
                 <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-full px-6 py-3 flex items-center gap-6 shadow-2xl shadow-black/50">
                     <div className="flex items-center gap-2">
                         <img src="/logo-hub.png" alt="Assistant Hub" className="w-8 h-8 rounded-lg" />
@@ -243,8 +265,8 @@ const LandingPageV2 = () => {
                         />
                         <FeatureCard
                             icon={<Shield className="w-6 h-6 text-emerald-400" />}
-                            title="Sem Julgamentos"
-                            desc="Ninguém vai saber que você esqueceu aquele ponto e vírgula."
+                            title="Saia da Fila do Suporte"
+                            desc="Não trave seu progresso esperando respostas. Receba diagnósticos precisos e solucione bugs em segundos."
                         />
                         <FeatureCard
                             icon={<Code2 className="w-6 h-6 text-cyan-400" />}

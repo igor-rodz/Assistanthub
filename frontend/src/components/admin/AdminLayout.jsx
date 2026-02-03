@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { supabase } from '@/lib/supabaseClient';
 import {
     LayoutDashboard,
     Users,
@@ -11,12 +12,49 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+// SEGURANÇA BRUTA: APENAS ESTES EMAILS PASSAM
+const ALLOWED_ADMINS = ['rodzigor@gmail.com']; // Hardcoded para segurança máxima
+
 /**
  * AdminLayout - Main layout for admin panel with sidebar navigation
  */
 const AdminLayout = ({ children }) => {
     const navigate = useNavigate();
     const location = useLocation();
+    const [isAuthorized, setIsAuthorized] = useState(false);
+    const [checking, setChecking] = useState(true);
+
+    useEffect(() => {
+        const checkGuard = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+
+            if (!user) {
+                navigate('/login');
+                return;
+            }
+
+            if (ALLOWED_ADMINS.includes(user.email)) {
+                setIsAuthorized(true);
+            } else {
+                console.error("⛔ ACESSO NEGADO: Tentativa de acesso admin por", user.email);
+                console.error("Este incidente será reportado.");
+                navigate('/dashboard');
+            }
+            setChecking(false);
+        };
+
+        checkGuard();
+    }, [navigate]);
+
+    if (checking) {
+        return (
+            <div className="min-h-screen bg-[#0a0a0c] flex items-center justify-center">
+                <Shield className="w-12 h-12 text-emerald-500 animate-pulse" />
+            </div>
+        );
+    }
+
+    if (!isAuthorized) return null;
 
     const navItems = [
         {
