@@ -86,6 +86,7 @@ const DashboardPage = () => {
   const [user, setUser] = useState(null);
   const [error, setError] = useState(null);
   const [loadingStatus, setLoadingStatus] = useState('Lendo log de erro...');
+  const [showSubscribeModal, setShowSubscribeModal] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -157,8 +158,16 @@ const DashboardPage = () => {
       } else if (e.response) {
         const serverMsg = e.response.data?.error || e.response.data?.message;
         const isQuotaError = e.response.data?.isQuotaError;
+        const noCredits = e.response.data?.noCredits;
 
-        if (e.response.status === 504) {
+        if (e.response.status === 402 && noCredits) {
+          // User has 0 credits - show subscribe modal
+          setShowSubscribeModal(true);
+          setCurrentView('input');
+          return;
+        } else if (e.response.status === 402) {
+          setError('Créditos insuficientes. Adquira mais créditos para continuar.');
+        } else if (e.response.status === 504) {
           setError('⏱️ Timeout na análise. A imagem pode ser muito grande. Tente novamente ou use apenas texto.');
         } else if (e.response.status === 429) {
           setError(isQuotaError ? '⚠️ Cota da API de IA excedida.' : 'Muitas requisições. Tente em breve.');
@@ -211,13 +220,84 @@ const DashboardPage = () => {
   }
 
   return (
-    <ErrorLogInput
-      onGenerate={handleGenerate}
-      onBack={() => { }}
-      user={user}
-      onOpenProfile={handleOpenProfile}
-      error={error}
-    />
+    <>
+      <ErrorLogInput
+        onGenerate={handleGenerate}
+        onBack={() => { }}
+        user={user}
+        onOpenProfile={handleOpenProfile}
+        error={error}
+      />
+
+      {/* Subscribe Modal */}
+      {showSubscribeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="relative w-full max-w-md bg-gradient-to-b from-[#1a1a2e] to-[#0d0d0f] border border-white/10 rounded-2xl p-8 shadow-2xl">
+            {/* Close button */}
+            <button
+              onClick={() => setShowSubscribeModal(false)}
+              className="absolute top-4 right-4 p-2 text-white/40 hover:text-white transition-colors hover:bg-white/5 rounded-lg"
+            >
+              ✕
+            </button>
+
+            {/* Icon */}
+            <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-gradient-to-br from-cyan-500 to-emerald-500 flex items-center justify-center">
+              <span className="text-3xl">🚀</span>
+            </div>
+
+            {/* Title */}
+            <h3 className="text-2xl font-bold text-white text-center mb-3">
+              Ative sua Conta
+            </h3>
+
+            {/* Description */}
+            <p className="text-white/60 text-center mb-6">
+              Para usar o One-Shot Fixes, você precisa de créditos.
+              Assine agora e comece a corrigir seus erros instantaneamente!
+            </p>
+
+            {/* Benefits */}
+            <div className="space-y-3 mb-6">
+              {[
+                '700 créditos para análises',
+                'Suporte a múltiplos frameworks',
+                'Respostas detalhadas com IA',
+                'Histórico de análises'
+              ].map((benefit, i) => (
+                <div key={i} className="flex items-center gap-3 text-white/80">
+                  <span className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-xs">✓</span>
+                  <span className="text-sm">{benefit}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Price */}
+            <div className="text-center mb-6">
+              <span className="text-white/40 text-sm line-through">R$ 49,90</span>
+              <div className="text-3xl font-bold text-white">
+                R$ 29,90
+                <span className="text-sm font-normal text-white/40">/único</span>
+              </div>
+            </div>
+
+            {/* CTA Button */}
+            <a
+              href="https://pay.perfectpay.com.br/pago/MGT2LDQ2LDQ1LDQxLDIx="
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full py-4 bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 text-black font-bold rounded-xl transition-all text-center"
+            >
+              Assinar Agora
+            </a>
+
+            <p className="text-white/30 text-xs text-center mt-4">
+              Pagamento seguro via PerfectPay
+            </p>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

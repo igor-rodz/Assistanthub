@@ -36,7 +36,9 @@ export default async function handler(request) {
         if (!hasCredits) {
             throw {
                 status: 402,
-                message: `Créditos insuficientes. Você tem ${balance.toFixed(2)} créditos, mas precisa de pelo menos ${minCost} créditos.`
+                message: 'Créditos insuficientes para realizar esta análise.',
+                noCredits: balance === 0,
+                currentBalance: balance
             };
         }
 
