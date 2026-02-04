@@ -3,6 +3,7 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight, Copy, Check, Zap, Terminal, Sparkles, Play, Code2, Shield, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { EtheralShadow } from '@/components/ui/etheral-shadow';
+import TestimonialsSection from '@/components/ui/TestimonialsSection';
 
 const CHECKOUT_URL = 'https://pay.perfectpay.com.br/PMW/SEU_LINK_AQUI';
 
@@ -315,6 +316,9 @@ const LandingPageV2 = () => {
                     </div>
                 </div>
             </section>
+
+            {/* TESTIMONIALS SECTION */}
+            <TestimonialsSection />
 
             {/* Footer Simple */}
             <footer className="py-12 text-center text-zinc-600 text-sm">
