@@ -13,6 +13,8 @@ import { AiLoader } from "@/components/ui/ai-loader";
 import LandingPageV2 from "@/components/LandingPageV2";
 import Login from "@/components/auth/Login";
 import Register from "@/components/auth/Register";
+import TermsPage from "@/components/legal/TermsPage";
+import PrivacyPage from "@/components/legal/PrivacyPage";
 import { supabase } from "@/lib/supabaseClient";
 
 // Backend URL is handled in api.js now
@@ -219,42 +221,56 @@ const DashboardPage = () => {
     );
   }
 
+  // Check for Hard Gate (Zero Credits)
+  const isHardGate = user && (!user.credit_balance || user.credit_balance <= 0);
+
+  useEffect(() => {
+    if (user && isHardGate) {
+      setShowSubscribeModal(true);
+    }
+  }, [user, isHardGate]);
+
   return (
     <>
-      <ErrorLogInput
-        onGenerate={handleGenerate}
-        onBack={() => { }}
-        user={user}
-        onOpenProfile={handleOpenProfile}
-        error={error}
-      />
+      <div className={`transition-all duration-500 ${isHardGate ? 'blur-md pointer-events-none select-none opacity-50' : ''}`}>
+        <ErrorLogInput
+          onGenerate={handleGenerate}
+          onBack={() => { }}
+          user={user}
+          onOpenProfile={handleOpenProfile}
+          error={error}
+        />
+      </div>
 
       {/* Subscribe Modal */}
       {showSubscribeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-xl p-4">
           <div className="relative w-full max-w-md bg-gradient-to-b from-[#1a1a2e] to-[#0d0d0f] border border-white/10 rounded-2xl p-8 shadow-2xl">
-            {/* Close button */}
-            <button
-              onClick={() => setShowSubscribeModal(false)}
-              className="absolute top-4 right-4 p-2 text-white/40 hover:text-white transition-colors hover:bg-white/5 rounded-lg"
-            >
-              ✕
-            </button>
+            {/* Close button - ONLY if not Hard Gate */}
+            {!isHardGate && (
+              <button
+                onClick={() => setShowSubscribeModal(false)}
+                className="absolute top-4 right-4 p-2 text-white/40 hover:text-white transition-colors hover:bg-white/5 rounded-lg"
+              >
+                ✕
+              </button>
+            )}
 
             {/* Icon */}
-            <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-gradient-to-br from-cyan-500 to-emerald-500 flex items-center justify-center">
-              <span className="text-3xl">🚀</span>
+            <div className={`w-16 h-16 mx-auto mb-6 rounded-full flex items-center justify-center ${isHardGate ? 'bg-red-500/20 text-red-400 animate-pulse' : 'bg-gradient-to-br from-cyan-500 to-emerald-500'}`}>
+              <span className="text-3xl">{isHardGate ? '🔒' : '🚀'}</span>
             </div>
 
             {/* Title */}
             <h3 className="text-2xl font-bold text-white text-center mb-3">
-              Ative sua Conta
+              {isHardGate ? 'Assinatura Necessária' : 'Ative sua Conta'}
             </h3>
 
             {/* Description */}
             <p className="text-white/60 text-center mb-6">
-              Para usar o One-Shot Fixes, você precisa de créditos.
-              Assine agora e comece a corrigir seus erros instantaneamente!
+              {isHardGate
+                ? 'Para acessar o painel e corrigir erros, você precisa de uma assinatura ativa.'
+                : 'Para usar o One-Shot Fixes, você precisa de créditos. Assine agora e comece a corrigir seus erros instantaneamente!'}
             </p>
 
             {/* Benefits */}
@@ -274,26 +290,43 @@ const DashboardPage = () => {
 
             {/* Price */}
             <div className="text-center mb-6">
-              <span className="text-white/40 text-sm line-through">R$ 49,90</span>
+              <span className="text-white/40 text-sm line-through">R$ 59,90</span>
               <div className="text-3xl font-bold text-white">
-                R$ 29,90
+                R$ 39,90
                 <span className="text-sm font-normal text-white/40">/único</span>
               </div>
             </div>
 
             {/* CTA Button */}
             <a
-              href="https://pay.perfectpay.com.br/pago/MGT2LDQ2LDQ1LDQxLDIx="
+              href="https://go.perfectpay.com.br/PPU38CQ71PE"
               target="_blank"
               rel="noopener noreferrer"
-              className="block w-full py-4 bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 text-black font-bold rounded-xl transition-all text-center"
+              className="block w-full py-4 bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 text-black font-bold rounded-xl transition-all text-center animate-shimmer bg-[length:200%_100%]"
             >
-              Assinar Agora
+              Liberar Acesso Agora
             </a>
 
-            <p className="text-white/30 text-xs text-center mt-4">
-              Pagamento seguro via PerfectPay
-            </p>
+            <div className="mt-4 flex flex-col gap-2 items-center">
+              <p className="text-white/30 text-xs text-center">
+                Pagamento seguro via PerfectPay
+              </p>
+              {/* User Info / Logout option for trapped users */}
+              {isHardGate && (
+                <div className="mt-2 pt-4 border-t border-white/5 w-full text-center">
+                  <p className="text-white/40 text-xs mb-2">Logado como {user?.email}</p>
+                  <button
+                    onClick={() => {
+                      supabase.auth.signOut();
+                      window.location.href = '/';
+                    }}
+                    className="text-xs text-red-400 hover:text-red-300 underline"
+                  >
+                    Sair da conta
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -409,6 +442,8 @@ function App() {
           <Route path="/" element={<LandingPageV2 />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
 
           <Route path="/dashboard" element={
             <ProtectedRoute>

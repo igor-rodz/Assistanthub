@@ -6,7 +6,7 @@ import { EtheralShadow } from '@/components/ui/etheral-shadow';
 import TestimonialsSection from '@/components/ui/TestimonialsSection';
 import { GlowCard } from '@/components/ui/GlowCard';
 
-const CHECKOUT_URL = 'https://pay.perfectpay.com.br/PMW/SEU_LINK_AQUI';
+const CHECKOUT_URL = 'https://go.perfectpay.com.br/PPU38CQ71PE';
 
 const LandingPageV2 = () => {
     const navigate = useNavigate();
@@ -58,7 +58,7 @@ const LandingPageV2 = () => {
                     </div>
                     <div className="h-6 w-px bg-white/10" />
                     <button
-                        onClick={() => window.open(CHECKOUT_URL)}
+                        onClick={() => navigate('/register')}
                         className="text-sm font-medium text-zinc-300 hover:text-white transition-colors"
                     >
                         Criar Conta
@@ -304,10 +304,10 @@ const LandingPageV2 = () => {
 
                             <div className="pt-8">
                                 <button
-                                    onClick={() => window.open(CHECKOUT_URL)}
+                                    onClick={() => navigate('/register')}
                                     className="px-12 py-6 bg-white text-black text-xl font-bold rounded-full hover:scale-105 transition-transform shadow-2xl hover:shadow-white/20"
                                 >
-                                    Assinar por R$ 29,90 <span className="opacity-50 text-sm ml-2">/mês</span>
+                                    Criar Conta e Assinar
                                 </button>
                                 <p className="mt-6 text-sm text-zinc-500">
                                     Garantia de 7 dias ou seu dinheiro de volta.
@@ -322,7 +322,11 @@ const LandingPageV2 = () => {
             <TestimonialsSection />
 
             {/* Footer Simple */}
-            <footer className="py-12 text-center text-zinc-600 text-sm">
+            <footer className="py-12 flex flex-col items-center justify-center gap-4 text-zinc-600 text-sm">
+                <div className="flex gap-6">
+                    <button onClick={() => navigate('/terms')} className="hover:text-emerald-400 transition-colors">Termos de Uso</button>
+                    <button onClick={() => navigate('/privacy')} className="hover:text-emerald-400 transition-colors">Privacidade</button>
+                </div>
                 <p>&copy; 2024 Assistant Hub. Feito por devs, para devs.</p>
             </footer>
 
