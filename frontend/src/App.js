@@ -11,8 +11,7 @@ import { AdminLayout, AdminDashboard, AdminUsers, AdminCredits, AdminUsageLogs }
 import Layout from "@/components/Layout";
 import { AiLoader } from "@/components/ui/ai-loader";
 import LandingPageV2 from "@/components/LandingPageV2";
-import Login from "@/components/auth/Login";
-import Register from "@/components/auth/Register";
+import AuthPage from "@/components/auth/AuthPage";
 import TermsPage from "@/components/legal/TermsPage";
 import PrivacyPage from "@/components/legal/PrivacyPage";
 import { supabase } from "@/lib/supabaseClient";
@@ -440,8 +439,8 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<LandingPageV2 />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<AuthPage />} />
+          <Route path="/register" element={<AuthPage />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
 

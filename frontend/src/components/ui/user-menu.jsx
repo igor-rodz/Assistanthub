@@ -55,7 +55,7 @@ export const UserMenu = ({ user, credits, onLogout }) => {
                                 className="flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-white/5 transition-colors group cursor-pointer"
                             >
                                 <span className="text-xs text-zinc-400 group-hover:text-zinc-300">Plano</span>
-                                <span className="text-[10px] font-bold bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded uppercase tracking-wide">{credits?.plan || "Starter"}</span>
+                                <span className="text-[10px] font-bold bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded uppercase tracking-wide">{credits?.plan || "Pro"}</span>
                             </Link>
                             <Link
                                 to="/perfil?tab=creditos"
@@ -109,7 +109,7 @@ export const UserMenu = ({ user, credits, onLogout }) => {
                         className="flex-1 min-w-0 flex items-center justify-between"
                     >
                         <span className="bg-zinc-800 border border-white/5 text-zinc-300 text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wide">
-                            {credits?.plan === 'starter' ? 'Start' : credits?.plan || 'Pro'}
+                            {credits?.plan || 'Pro'}
                         </span>
 
                         <div className="flex items-center gap-1.5 text-zinc-400 pr-1">

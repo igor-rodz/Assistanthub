@@ -60,14 +60,14 @@ const Layout = ({ children }) => {
             try {
                 const [userRes, creditsRes] = await Promise.all([
                     api.get('/dashboard/user'),
-                    api.get('/dashboard/metrics').catch(() => null) // Credits might be in metrics
+                    api.get('/credits/balance').catch(() => null)
                 ]);
                 if (userRes.data) setUser(userRes.data);
-                // Credits are typically part of user data or metrics
+
                 if (creditsRes?.data) {
                     setCredits({
-                        credit_balance: creditsRes.data.credits || 0,
-                        plan: creditsRes.data.plan || "starter",
+                        credit_balance: creditsRes.data.credit_balance ?? 0,
+                        plan: creditsRes.data.plan || "pro",
                         monthly_limit: creditsRes.data.monthly_limit || 300
                     });
                 }
