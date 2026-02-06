@@ -282,8 +282,8 @@ const LandingPageV2 = () => {
 
             {/* FINAL CTA - MEGA CARD */}
             <section id="pricing-card" className="pb-12 px-6 relative z-10">
-                <div className="max-w-5xl mx-auto">
-                    <div className="relative rounded-[3rem] overflow-hidden bg-black border border-emerald-500/20 p-12 md:p-24 text-center">
+                <div className="max-w-4xl mx-auto">
+                    <div className="relative rounded-[2.5rem] overflow-hidden bg-black border border-emerald-500/20 p-8 md:p-16 text-center">
                         {/* Pricing Background Animation */}
                         <div className="absolute inset-0 z-0">
                             <EtheralShadow
@@ -293,23 +293,32 @@ const LandingPageV2 = () => {
                             />
                         </div>
 
-                        <div className="relative z-10 space-y-8">
-                            <h2 className="text-5xl md:text-7xl font-black text-white tracking-tight">
+                        <div className="relative z-10 space-y-6">
+                            <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">
                                 Comece agora.
                             </h2>
-                            <p className="text-2xl text-emerald-100/60 max-w-lg mx-auto">
-                                700 créditos mensais. <br />
-                                Cancele quando quiser.
+                            <p className="text-xl text-emerald-100/60 max-w-lg mx-auto">
+                                700 créditos mensais. Cancele quando quiser.
                             </p>
 
-                            <div className="pt-8">
+                            <div className="flex flex-col items-center gap-1 pt-2">
+                                <span className="text-zinc-500 line-through text-base">R$ 59,90</span>
+                                <div className="text-4xl md:text-5xl font-black text-white tracking-tighter">
+                                    R$ 39,90<span className="text-lg text-zinc-500 font-medium ml-2">/mês</span>
+                                </div>
+                                <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase tracking-wider mt-1">
+                                    Oferta de Lançamento
+                                </span>
+                            </div>
+
+                            <div className="pt-6">
                                 <button
                                     onClick={() => navigate('/register')}
-                                    className="px-12 py-6 bg-white text-black text-xl font-bold rounded-full hover:scale-105 transition-transform shadow-2xl hover:shadow-white/20"
+                                    className="px-10 py-5 bg-white text-black text-lg font-bold rounded-full hover:scale-105 transition-transform shadow-2xl hover:shadow-white/20"
                                 >
                                     Criar Conta e Assinar
                                 </button>
-                                <p className="mt-6 text-sm text-zinc-500">
+                                <p className="mt-4 text-xs text-zinc-500">
                                     Garantia de 7 dias ou seu dinheiro de volta.
                                 </p>
                             </div>
