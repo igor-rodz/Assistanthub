@@ -24,19 +24,19 @@ const SubscriptionView = ({ credits, onUpgrade }) => {
             <div className="grid grid-cols-1 max-w-lg mx-auto">
                 <PlanCard
                     title="Acesso Total"
-                    price="29,90"
-                    credits="1.000"
+                    price="39,90"
+                    credits="700"
                     features={[
-                        '1.000 Créditos Mensais',
+                        '700 Créditos Mensais',
                         'Acesso Total ao One-Shot Fixes',
-                        'Scripts Premium Ilimitados',
                         'Suporte Prioritário',
                         'Atualizações Antecipadas',
-                        'Acesso Vitalício ao Hub'
                     ]}
                     missing={[]}
-                    isActive={true} // Single plan is always the target/active context visually
-                    onSelect={() => window.open('https://perfectpay.com.br/checkout/SEU_LINK_AQUI', '_blank')}
+                    isActive={true}
+                    onSelect={() => window.open('https://app.perfectpay.com.br/customer/login', '_blank')}
+                    btnText="Gerenciar Assinatura / Cancelar"
+                    btnStyle="danger"
                     color="purple"
                     isPopular
                 />
@@ -68,7 +68,7 @@ const SubscriptionView = ({ credits, onUpgrade }) => {
     );
 };
 
-const PlanCard = ({ title, price, credits, features, missing, isActive, onSelect, color, isPopular }) => {
+const PlanCard = ({ title, price, credits, features, missing, isActive, onSelect, color, isPopular, btnText, btnStyle }) => {
     const borderColor = isActive
         ? color === 'purple' ? 'border-purple-500' : color === 'blue' ? 'border-blue-500' : 'border-zinc-500'
         : 'border-white/5 group-hover:border-white/10';
@@ -103,13 +103,14 @@ const PlanCard = ({ title, price, credits, features, missing, isActive, onSelect
 
                 <button
                     onClick={onSelect}
-                    disabled={isActive}
-                    className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-all mb-8 ${isActive
-                        ? 'bg-white/5 text-zinc-500 cursor-default'
-                        : 'bg-white text-black hover:bg-zinc-200'
+                    className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-all mb-8 ${btnStyle === 'danger'
+                        ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20'
+                        : isActive
+                            ? 'bg-white/5 text-zinc-500 cursor-default'
+                            : 'bg-white text-black hover:bg-zinc-200'
                         }`}
                 >
-                    {isActive ? 'Plano Atual' : 'Selecionar Plano'}
+                    {btnText || (isActive ? 'Plano Atual' : 'Selecionar Plano')}
                 </button>
 
                 <div className="space-y-3">

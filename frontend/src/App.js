@@ -203,6 +203,15 @@ const DashboardPage = () => {
     navigate('/perfil');
   };
 
+  // Check for Hard Gate (Zero Credits)
+  const isHardGate = user && (!user.credit_balance || user.credit_balance <= 0);
+
+  useEffect(() => {
+    if (user && isHardGate) {
+      setShowSubscribeModal(true);
+    }
+  }, [user, isHardGate]);
+
   if (currentView === 'loading') {
     return (
       <AiLoader text={loadingStatus} size={250} />
@@ -220,15 +229,6 @@ const DashboardPage = () => {
       />
     );
   }
-
-  // Check for Hard Gate (Zero Credits)
-  const isHardGate = user && (!user.credit_balance || user.credit_balance <= 0);
-
-  useEffect(() => {
-    if (user && isHardGate) {
-      setShowSubscribeModal(true);
-    }
-  }, [user, isHardGate]);
 
   return (
     <>

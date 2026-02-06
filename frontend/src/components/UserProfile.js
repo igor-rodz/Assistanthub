@@ -7,7 +7,8 @@ import {
   Coins,
   Settings,
   LogOut,
-  ArrowLeft
+  ArrowLeft,
+  RefreshCw
 } from 'lucide-react';
 import ProfileView from './profile/ProfileView';
 import SubscriptionView from './profile/SubscriptionView';
@@ -57,23 +58,26 @@ const UserProfile = ({ user: initialUser, onBack, onLogout }) => {
     }
   };
 
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const t = Date.now();
+      const [userRes, creditsRes, usageRes] = await Promise.all([
+        api.get(`/dashboard/user?t=${t}`),
+        api.get(`/credits/balance?t=${t}`),
+        api.get(`/credits/history?t=${t}`)
+      ]);
+      if (userRes.data) setUser(userRes.data);
+      if (creditsRes.data) setCredits(creditsRes.data);
+      if (usageRes.data?.history) setUsageHistory(usageRes.data.history);
+    } catch (e) {
+      console.warn("Backend not available, using default data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [userRes, creditsRes, usageRes] = await Promise.all([
-          api.get('/dashboard/user'),
-          api.get('/credits/balance'),
-          api.get('/credits/history')
-        ]);
-        if (userRes.data) setUser(userRes.data);
-        if (creditsRes.data) setCredits(creditsRes.data);
-        if (usageRes.data?.history) setUsageHistory(usageRes.data.history);
-      } catch (e) {
-        console.warn("Backend not available, using default data");
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchData();
   }, []);
 
@@ -118,9 +122,14 @@ const UserProfile = ({ user: initialUser, onBack, onLogout }) => {
       <main className="max-w-7xl mx-auto px-4 md:px-12 pt-28 pb-24 relative z-10">
         {/* Context Header */}
         <header className="flex justify-between items-center mb-8 text-white">
-          <h1 className="text-2xl font-bold tracking-tight">
-            {activeView === 'Créditos' ? 'Dashboard de Uso Avançado' : activeView}
-          </h1>
+          <div className="flex items-center gap-4">
+            <h1 className="text-2xl font-bold tracking-tight">
+              {activeView === 'Créditos' ? 'Dashboard de Uso Avançado' : activeView}
+            </h1>
+            <button onClick={fetchData} className="p-2 bg-white/5 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-colors" title="Atualizar dados">
+              <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+            </button>
+          </div>
           <button className="p-2 glass-panel rounded-lg text-white/60 hover:text-white transition-colors">
             <Settings size={20} />
           </button>

@@ -29,15 +29,14 @@ export default async function handler(request) {
             });
         }
 
-        // Logic to determine plan if missing or inconsistent with balance
-        let finalPlan = data.plan || 'free';
+        // Normalize plan
+        let finalPlan = (data.plan || 'free').toLowerCase().trim();
 
-        // Auto-upgrade visual plan if balance is high but plan says free
-        // This fixes the "50" limit display issue for users with high balance
+        // Safety: If user has significant credits (> 100), they are NOT free, regardless of label.
+        // This handles legacy data or sync issues.
         const balance = data.credit_balance || 0;
-        if (finalPlan === 'free' && balance > 60) {
-            if (balance > 500) finalPlan = 'pro';
-            else finalPlan = 'starter';
+        if (balance > 100 && finalPlan === 'free') {
+            finalPlan = 'pro';
         }
 
         if (data.role === 'admin') {

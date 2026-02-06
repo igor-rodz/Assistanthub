@@ -41,7 +41,7 @@ const FinalCTASection = () => {
                     onClick={handleCheckout}
                     className="group inline-flex items-center gap-3 py-4 px-8 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-black font-bold text-lg hover:from-emerald-400 hover:to-cyan-400 transition-all duration-300 transform hover:scale-105 active:scale-95"
                 >
-                    Começar por R$ 29,90/mês
+                    Começar por R$ 39,90/mês
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
 

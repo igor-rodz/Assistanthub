@@ -10,7 +10,7 @@ export default async function handler(request) {
         const url = new URL(request.url);
         const plan = url.searchParams.get('plan');
 
-        // SINGLE PLAN LOGIC: R$ 29,90 = 600 credits.
+        // SINGLE PLAN LOGIC: R$ 39,90 = 700 credits.
         const newCredits = 600;
         const newPlan = 'pro';
 

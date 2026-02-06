@@ -8,6 +8,7 @@ dotenv.config();
 // Handlers Imports
 import health from './health.js';
 import analyzeError from './analyze-error.js';
+import perfectPay from './webhooks/perfectpay.js';
 import metrics from './dashboard/metrics.js';
 import tools from './dashboard/tools.js';
 import user from './dashboard/user.js';
@@ -74,8 +75,10 @@ const adapt = (handler) => async (req, res) => {
 // --- Routes Mapping ---
 
 // Health & Analysis
+// Health & Analysis
 app.all('/api/health', adapt(health));
 app.all('/api/analyze-error', adapt(analyzeError));
+app.all('/api/webhooks/perfectpay', adapt(perfectPay));
 
 // Dashboard
 app.all('/api/dashboard/metrics', adapt(metrics));

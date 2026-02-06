@@ -157,22 +157,7 @@ const ProfileView = ({ user }) => {
                                 </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-xs font-medium text-zinc-400 uppercase tracking-wider ml-1">Avatar URL (Opcional)</label>
-                                <div className="relative group">
-                                    <div className="absolute left-4 top-3.5 text-zinc-500 group-focus-within:text-purple-400 transition-colors">
-                                        <LinkIcon size={18} />
-                                    </div>
-                                    <input
-                                        type="text"
-                                        name="avatar"
-                                        value={formData.avatar}
-                                        onChange={handleChange}
-                                        className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-zinc-700 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all font-medium font-mono text-sm"
-                                        placeholder="https://..."
-                                    />
-                                </div>
-                            </div>
+
 
                             <div className="pt-8 flex items-center justify-between border-t border-white/5">
                                 <p className="text-sm text-zinc-500">Membro desde {user?.member_since || 'Outubro 2023'}</p>
