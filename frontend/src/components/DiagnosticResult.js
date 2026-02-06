@@ -69,7 +69,7 @@ const DiagnosticResult = ({ analysisResult, onNewAnalysis, onBack }) => {
   };
 
   const severityConfig = getSeverityConfig(diagnosticData.severity);
-  const promptLines = diagnosticData.prompt.split('\n');
+  const promptLines = String(diagnosticData.prompt || '').split('\n');
   const visibleLines = promptExpanded ? promptLines : promptLines.slice(0, 6);
 
   const handleSave = () => {
@@ -77,7 +77,9 @@ const DiagnosticResult = ({ analysisResult, onNewAnalysis, onBack }) => {
   };
 
   const formatText = (text) => {
-    return text.split('`').map((part, i) =>
+    if (text === null || text === undefined) return null;
+    const safeText = String(text);
+    return safeText.split('`').map((part, i) =>
       i % 2 === 1
         ? <code key={i} className="text-cyan-400 bg-cyan-500/10 px-1.5 py-0.5 rounded font-mono text-xs">{part}</code>
         : <span key={i}>{part}</span>

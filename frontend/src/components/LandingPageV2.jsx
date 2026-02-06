@@ -4,6 +4,7 @@ import { ArrowRight, Copy, Check, Zap, Terminal, Sparkles, Play, Code2, Shield, 
 import { useNavigate } from 'react-router-dom';
 import { EtheralShadow } from '@/components/ui/etheral-shadow';
 import TestimonialsSection from '@/components/ui/TestimonialsSection';
+import { GlowCard } from '@/components/ui/GlowCard';
 
 const CHECKOUT_URL = 'https://pay.perfectpay.com.br/PMW/SEU_LINK_AQUI';
 
@@ -258,21 +259,21 @@ const LandingPageV2 = () => {
                         </p>
                     </div>
 
-                    <div className="grid md:grid-cols-3 gap-6">
+                    <div className="grid md:grid-cols-3 gap-8">
                         <FeatureCard
-                            icon={<Clock className="w-6 h-6 text-orange-400" />}
+                            icon={<img src="/assets/icons/clock-3d.png" alt="Relógio 24h" className="w-16 h-16 object-contain" />}
                             title="Economize Horas"
-                            desc="O que levaria uma manhã de debug, a IA resolve em segundos."
+                            desc="O que levaria uma manhã de debug, a IA resolve em segundos. Foco no que importa."
                         />
                         <FeatureCard
-                            icon={<Shield className="w-6 h-6 text-emerald-400" />}
+                            icon={<img src="/assets/icons/support-3d.png" alt="Suporte" className="w-16 h-16 object-contain" />}
                             title="Saia da Fila do Suporte"
                             desc="Não trave seu progresso esperando respostas. Receba diagnósticos precisos e solucione bugs em segundos."
                         />
                         <FeatureCard
-                            icon={<Code2 className="w-6 h-6 text-cyan-400" />}
+                            icon={<img src="/assets/icons/code-3d.png" alt="Código" className="w-16 h-16 object-contain" />}
                             title="Explica o Porquê"
-                            desc="Além de corrigir, você aprende o que causou o erro."
+                            desc="Além de sugerir a correção, você aprende o que causou o erro com explicações didáticas."
                         />
                     </div>
                 </div>
@@ -280,7 +281,7 @@ const LandingPageV2 = () => {
 
 
             {/* FINAL CTA - MEGA CARD */}
-            <section id="pricing-card" className="pb-32 px-6 relative z-10">
+            <section id="pricing-card" className="pb-12 px-6 relative z-10">
                 <div className="max-w-5xl mx-auto">
                     <div className="relative rounded-[3rem] overflow-hidden bg-black border border-emerald-500/20 p-12 md:p-24 text-center">
                         {/* Pricing Background Animation */}
@@ -330,13 +331,13 @@ const LandingPageV2 = () => {
 };
 
 const FeatureCard = ({ icon, title, desc }) => (
-    <div className="p-8 rounded-[2rem] bg-zinc-900/50 border border-white/5 text-left hover:bg-zinc-900 transition-colors">
-        <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-6">
+    <GlowCard className="text-left h-full flex flex-col items-start">
+        <div className="mb-8 min-h-[64px] flex items-center justify-start">
             {icon}
         </div>
-        <h3 className="text-lg font-bold text-white mb-2">{title}</h3>
-        <p className="text-zinc-400">{desc}</p>
-    </div>
+        <h3 className="text-xl font-bold text-white mb-3">{title}</h3>
+        <p className="text-zinc-400 leading-relaxed text-sm md:text-base">{desc}</p>
+    </GlowCard>
 );
 
 export default LandingPageV2;

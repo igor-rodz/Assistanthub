@@ -58,43 +58,30 @@ export async function getGeminiModel() {
         }
 
         const genAI = new GoogleGenerativeAI(key);
-        geminiModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        geminiModel = genAI.getGenerativeModel({
+            model: "gemini-2.5-flash", // Gemini 2.5 Flash (Always strict rule)
+            generationConfig: {
+                temperature: 0.3,
+                topP: 0.9,
+                maxOutputTokens: 8192, // Increased for detailed prompts
+                responseMimeType: 'application/json'
+            }
+        });
     }
     return geminiModel;
 }
 
-export async function generateWithRetry(model, prompt, retries = 3) {
+export async function generateWithRetry(model, prompt, retries = 2) {
     for (let i = 0; i < retries; i++) {
         try {
-            return await model.generateContent(prompt);
+            console.log(`[generateWithRetry] Attempt ${i + 1}/${retries}`);
+            const result = await model.generateContent(prompt);
+            return result;
         } catch (error) {
-            const isLastAttempt = i === retries - 1;
-            const status = error.response?.status || error.status || 500;
-            const errorMessage = error.message || error.toString() || '';
-
-            // Check if it's a quota error
-            const isQuotaError = errorMessage.includes('quota') ||
-                errorMessage.includes('Quota exceeded') ||
-                errorMessage.includes('exceeded your current quota');
-
-            // If it's a quota error, don't retry - return a specific error
-            if (isQuotaError) {
-                throw {
-                    status: 429,
-                    message: 'Cota da API Gemini excedida. Verifique seu plano e faturamento no Google Cloud Console. Aguarde alguns minutos antes de tentar novamente.',
-                    isQuotaError: true
-                };
-            }
-
-            // Retry on 429 (Too Many Requests) or 503 (Service Unavailable) - but not quota errors
-            if ((status === 429 || status === 503) && !isLastAttempt && !isQuotaError) {
-                const delay = Math.pow(2, i) * 1000; // Exponential backoff: 1s, 2s, 4s
-                console.warn(`[Gemini Retry] Attempt ${i + 1} failed with ${status}. Retrying in ${delay}ms...`);
-                await new Promise(resolve => setTimeout(resolve, delay));
-                continue;
-            }
-
-            throw error;
+            console.error(`[generateWithRetry] Attempt ${i + 1} failed:`, error.message);
+            if (i === retries - 1) throw error;
+            // Wait longer between retries for Gemini stability
+            await new Promise(resolve => setTimeout(resolve, 2000 * (i + 1)));
         }
     }
 }

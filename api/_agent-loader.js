@@ -2,8 +2,10 @@ import fs from 'fs/promises';
 import path from 'path';
 
 const PROJECT_ROOT = process.cwd();
-const AGENTS_DIR = path.join(PROJECT_ROOT, '.agent', 'agents');
-const SKILLS_DIR = path.join(PROJECT_ROOT, '.agent', 'skills');
+// Local server runs from /api, but .agent is in the root
+const BASE_DIR = PROJECT_ROOT.endsWith('api') ? path.join(PROJECT_ROOT, '..') : PROJECT_ROOT;
+const AGENTS_DIR = path.join(BASE_DIR, '.agent', 'agents');
+const SKILLS_DIR = path.join(BASE_DIR, '.agent', 'skills');
 
 /**
  * Loads the content of an agent persona file.
@@ -74,6 +76,19 @@ export function routeError(errorLog, tags = []) {
         skills.push('api-patterns');
 
         if (/database|sql|prisma|supabase/.test(log)) {
+            skills.push('database-design');
+        }
+    }
+    // Backend/System/Infrastructure Detection (stronger signals)
+    else if (
+        /port|expose|docker|deployment|lasy\.app|8080|3000/.test(log) ||
+        /deadlock|memory|heap|corruption|distributed|transaction|sql_error/.test(log) ||
+        /cpp|c\+\+|\.cpp|sync_engine|orchestrator|system/.test(log) ||
+        /access denied|invalid token|not exposed/.test(log)
+    ) {
+        agent = 'backend-specialist';
+        skills.push('api-patterns');
+        if (/database|sql|deadlock|transaction/.test(log)) {
             skills.push('database-design');
         }
     }
