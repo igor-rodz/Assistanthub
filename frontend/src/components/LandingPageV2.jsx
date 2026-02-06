@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight, Copy, Check, Zap, Terminal, Sparkles, Play, Code2, Shield, Clock } from 'lucide-react';
+import { ArrowRight, Copy, Check, Zap, Terminal, Sparkles, Play, Code2, Shield, Clock, LifeBuoy } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { EtheralShadow } from '@/components/ui/etheral-shadow';
 import TestimonialsSection from '@/components/ui/TestimonialsSection';
@@ -261,17 +261,17 @@ const LandingPageV2 = () => {
 
                     <div className="grid md:grid-cols-3 gap-8">
                         <FeatureCard
-                            icon={<img src="/assets/icons/clock-3d.png" alt="Relógio 24h" className="w-16 h-16 object-contain" />}
+                            icon={<Clock className="w-12 h-12 text-emerald-400" />}
                             title="Economize Horas"
                             desc="O que levaria uma manhã de debug, a IA resolve em segundos. Foco no que importa."
                         />
                         <FeatureCard
-                            icon={<img src="/assets/icons/support-3d.png" alt="Suporte" className="w-16 h-16 object-contain" />}
+                            icon={<LifeBuoy className="w-12 h-12 text-cyan-400" />}
                             title="Saia da Fila do Suporte"
                             desc="Não trave seu progresso esperando respostas. Receba diagnósticos precisos e solucione bugs em segundos."
                         />
                         <FeatureCard
-                            icon={<img src="/assets/icons/code-3d.png" alt="Código" className="w-16 h-16 object-contain" />}
+                            icon={<Code2 className="w-12 h-12 text-purple-400" />}
                             title="Explica o Porquê"
                             desc="Além de sugerir a correção, você aprende o que causou o erro com explicações didáticas."
                         />
