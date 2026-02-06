@@ -12,10 +12,10 @@ import {
     corsHeaders,
     generateWithRetry
 } from './_helpers.js';
-import { routeError } from './_agent-loader.js';
+import { routeError } from './_agent-router.js'; // Use edge-safe router
 
-// Clean config regarding Vercel limits
-export const config = { maxDuration: 60 };
+// Switch to Edge Runtime to handle longer timeouts (Gemini wait time)
+export const config = { runtime: 'edge' };
 
 const MAX_ERROR_LOG_CHARS = 25000; // Increased because valid logs can be large
 
