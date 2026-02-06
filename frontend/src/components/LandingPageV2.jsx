@@ -261,17 +261,17 @@ const LandingPageV2 = () => {
 
                     <div className="grid md:grid-cols-3 gap-8">
                         <FeatureCard
-                            icon={<Clock className="w-12 h-12 text-emerald-400" />}
+                            icon={<img src="/img/icon-clock.png" alt="Relógio 24h" className="w-16 h-16 object-contain" />}
                             title="Economize Horas"
                             desc="O que levaria uma manhã de debug, a IA resolve em segundos. Foco no que importa."
                         />
                         <FeatureCard
-                            icon={<LifeBuoy className="w-12 h-12 text-cyan-400" />}
+                            icon={<img src="/img/icon-support.png" alt="Suporte" className="w-16 h-16 object-contain" />}
                             title="Saia da Fila do Suporte"
                             desc="Não trave seu progresso esperando respostas. Receba diagnósticos precisos e solucione bugs em segundos."
                         />
                         <FeatureCard
-                            icon={<Code2 className="w-12 h-12 text-purple-400" />}
+                            icon={<img src="/img/icon-code.png" alt="Código" className="w-16 h-16 object-contain" />}
                             title="Explica o Porquê"
                             desc="Além de sugerir a correção, você aprende o que causou o erro com explicações didáticas."
                         />
