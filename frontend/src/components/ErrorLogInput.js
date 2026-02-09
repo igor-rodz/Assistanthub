@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { LiquidButton } from "@/components/ui/liquid-glass-button";
 import ProceduralGroundBackground from "@/components/ui/ProceduralGroundBackground";
+import { AnimatedText } from "@/components/ui/animated-text";
 
 // Input Screen - One-Shot Fixes with Image Support
 const ErrorLogInput = ({ onGenerate, onBack, user, onOpenProfile, error }) => {
@@ -120,11 +121,16 @@ const ErrorLogInput = ({ onGenerate, onBack, user, onOpenProfile, error }) => {
       <main className="relative z-10 max-w-4xl mx-auto px-6 pt-6 pb-2">
         {/* Hero Title */}
         <div className="text-center mb-6">
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">
-            <span className="bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent">
-              One-Shot Fixes
-            </span>
-          </h1>
+          <AnimatedText
+            text="One-Shot Fixes"
+            duration={0.12}
+            delay={0.15}
+            textClassName="text-3xl md:text-4xl font-bold bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent"
+            underlineGradient="from-cyan-400 via-emerald-400 to-teal-400"
+            underlineHeight="h-1"
+            underlineOffset="-bottom-3"
+            className="mb-3"
+          />
           <p className="text-white/60 text-sm md:text-base max-w-2xl mx-auto">
             Cole seus logs de erro ou envie um screenshot para gerar prompts de correção.
           </p>

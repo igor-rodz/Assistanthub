@@ -289,6 +289,13 @@ CONTEÚDO DO CAMPO "prompt":
             }
         } catch (generationError) {
             console.error('[analyze-error] Generation failed:', generationError.message);
+            console.error('[analyze-error] Full error:', JSON.stringify({
+                name: generationError.name,
+                message: generationError.message,
+                stack: generationError.stack?.substring(0, 500),
+                code: generationError.code,
+                status: generationError.status
+            }));
             // analysis already set to default above
         }
 
