@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight, Copy, Check, Zap, Terminal, Sparkles, Play, Code2, Shield, Clock, LifeBuoy } from 'lucide-react';
+import { ArrowRight, Sparkles, Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { EtheralShadow } from '@/components/ui/etheral-shadow';
 import TestimonialsSection from '@/components/ui/TestimonialsSection';
@@ -129,93 +129,68 @@ const LandingPageV2 = () => {
             </motion.section>
 
 
-            {/* STICKY DEMO EXPERIENCE */}
+            {/* DEMO SHOWCASE - GIF */}
             <div id="demo" className="relative z-20 pb-32">
                 <motion.div
                     style={{ y: demoY }}
-                    className="max-w-6xl mx-auto px-6"
+                    className="max-w-5xl mx-auto px-6"
                 >
-                    {/* The "Container" */}
-                    <div className="relative group rounded-[3rem] bg-zinc-900 overflow-hidden border border-white/10 shadow-2xl transition-all duration-700 hover:shadow-emerald-900/20">
-                        {/* Glow Behind */}
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-[300px] bg-emerald-500/20 blur-[120px] rounded-full pointer-events-none" />
-
-                        {/* Browser Chrome */}
-                        <div className="flex items-center gap-4 px-8 py-6 border-b border-white/5 bg-white/5 backdrop-blur-md">
-                            <div className="flex gap-2">
-                                <div className="w-3 h-3 rounded-full bg-red-500/50" />
-                                <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
-                                <div className="w-3 h-3 rounded-full bg-green-500/50" />
-                            </div>
-                            <div className="flex-1 text-center">
-                                <div className="inline-block px-4 py-1.5 rounded-full bg-black/20 text-xs text-zinc-500 font-mono">
-                                    assistanthub.ai/demo
-                                </div>
-                            </div>
-                            <div className="w-12" />
-                        </div>
-
-                        {/* Content Grid */}
-                        <div className="grid lg:grid-cols-2 gap-0 min-h-[600px]">
-
-                            {/* Left: Input (Paste Error) */}
-                            <div className="p-10 md:p-14 border-b lg:border-b-0 lg:border-r border-white/5 relative overflow-hidden group/left">
-                                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-red-500/5 opacity-0 group-hover/left:opacity-100 transition-opacity" />
-
-                                <div className="relative z-10 h-full flex flex-col">
-                                    <div className="flex items-center gap-3 mb-6">
-                                        <div className="w-10 h-10 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-500">
-                                            <Terminal className="w-5 h-5" />
-                                        </div>
-                                        <h3 className="text-xl font-bold">1. Cole o Erro</h3>
-                                    </div>
-
-                                    <div className="flex-1 bg-black/50 rounded-3xl border border-white/10 p-6 font-mono text-sm text-red-400 relative overflow-hidden">
-                                        {/* Placeholder for GIF 1 */}
-                                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-900/90 z-20">
-                                            <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-4 border border-white/10">
-                                                <Play className="w-8 h-8 text-white ml-1" />
-                                            </div>
-                                            <p className="text-zinc-500 text-center px-4">
-                                                GIF: Usuário colando erro
-                                                <br />
-                                                <code className="text-xs bg-black/50 px-2 py-1 rounded mt-2 inline-block">/demo/paste-error.gif</code>
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Right: Output (Fix) */}
-                            <div className="p-10 md:p-14 relative overflow-hidden group/right bg-zinc-900/50">
-                                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-emerald-500/5 opacity-0 group-hover/right:opacity-100 transition-opacity" />
-
-                                <div className="relative z-10 h-full flex flex-col">
-                                    <div className="flex items-center gap-3 mb-6">
-                                        <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                                            <Zap className="w-5 h-5" />
-                                        </div>
-                                        <h3 className="text-xl font-bold">2. Solução Pronta</h3>
-                                    </div>
-
-                                    <div className="flex-1 bg-gradient-to-br from-emerald-900/10 to-black rounded-3xl border border-emerald-500/20 p-6 relative overflow-hidden">
-                                        {/* Placeholder for Result Image */}
-                                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-900/90 z-20">
-                                            <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mb-4 border border-emerald-500/20">
-                                                <Check className="w-8 h-8 text-emerald-400" />
-                                            </div>
-                                            <p className="text-zinc-500 text-center px-4">
-                                                Print da Tela de Resultado
-                                                <br />
-                                                <code className="text-xs bg-black/50 px-2 py-1 rounded mt-2 inline-block">/demo/result-screen.png</code>
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
+                    {/* Section Label */}
+                    <div className="text-center mb-10">
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-zinc-400 text-sm font-medium mb-6"
+                        >
+                            <Play className="w-4 h-4 text-emerald-400" />
+                            Veja funcionando
+                        </motion.div>
+                        <h2 className="text-3xl md:text-4xl font-black tracking-tight text-white">
+                            Cole o erro. <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Receba a correção.</span>
+                        </h2>
                     </div>
+
+                    {/* GIF Container */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 40 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.7 }}
+                        className="relative group"
+                    >
+                        {/* Glow Behind */}
+                        <div className="absolute -inset-4 bg-gradient-to-r from-emerald-500/20 via-cyan-500/10 to-emerald-500/20 rounded-[3rem] blur-[60px] opacity-50 group-hover:opacity-80 transition-opacity duration-700 pointer-events-none" />
+
+                        {/* Browser Window */}
+                        <div className="relative rounded-[2rem] bg-zinc-900 overflow-hidden border border-white/10 shadow-2xl shadow-black/50 transition-all duration-700 hover:border-emerald-500/20 hover:shadow-emerald-900/20">
+                            {/* Browser Chrome */}
+                            <div className="flex items-center gap-4 px-6 py-4 border-b border-white/5 bg-white/5 backdrop-blur-md">
+                                <div className="flex gap-2">
+                                    <div className="w-3 h-3 rounded-full bg-red-500/50" />
+                                    <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
+                                    <div className="w-3 h-3 rounded-full bg-green-500/50" />
+                                </div>
+                                <div className="flex-1 text-center">
+                                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/30 text-xs text-zinc-500 font-mono">
+                                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                        assistanthub.ai — One-Shot Fixes
+                                    </div>
+                                </div>
+                                <div className="w-12" />
+                            </div>
+
+                            {/* GIF Content */}
+                            <div className="relative">
+                                <img
+                                    src="/demo-oneshot.gif"
+                                    alt="Demonstração do One-Shot Fixes - Cole um erro e receba a correção instantânea"
+                                    className="w-full h-auto block"
+                                    loading="lazy"
+                                />
+                            </div>
+                        </div>
+                    </motion.div>
                 </motion.div>
             </div>
 
