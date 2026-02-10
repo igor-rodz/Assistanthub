@@ -34,7 +34,16 @@ export function EtheralShadow({
     children // Added children support to allow overlaying content if needed (though user wants background)
 }) {
     const id = useInstanceId();
-    const animationEnabled = animation && animation.scale > 0;
+    const [isMobile, setIsMobile] = React.useState(false);
+
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 768);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
+    const animationEnabled = !isMobile && animation && animation.scale > 0;
     const feColorMatrixRef = useRef(null);
     const hueRotateMotionValue = useMotionValue(180);
     const hueRotateAnimation = useRef(null);
