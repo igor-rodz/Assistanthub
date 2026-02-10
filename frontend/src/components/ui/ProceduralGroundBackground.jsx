@@ -120,7 +120,7 @@ const ProceduralGroundBackground = () => {
   }, []);
 
   return (
-    <div className="fixed inset-0 w-full h-full bg-zinc-950 z-0">
+    <div className="absolute inset-0 w-full h-full bg-zinc-950 z-0">
       <canvas
         ref={canvasRef}
         className="w-full h-full block touch-none"

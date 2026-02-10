@@ -9,7 +9,7 @@ begin
     new.raw_user_meta_data->>'full_name',
     new.raw_user_meta_data->>'avatar_url',
     'starter', -- Default plan
-    10 -- Default credits
+    0 -- No free credits - user must subscribe
   )
   on conflict (id) do update set
     email = excluded.email,

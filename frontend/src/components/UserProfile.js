@@ -119,7 +119,7 @@ const UserProfile = ({ user: initialUser, onBack, onLogout }) => {
       <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[30%] bg-blue-600/10 blur-[100px] rounded-full point-events-none z-0"></div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 md:px-12 pt-28 pb-24 relative z-10">
+      <main className="max-w-7xl mx-auto px-4 md:px-12 pt-32 md:pt-28 pb-24 relative z-10">
         {/* Context Header */}
         <header className="flex justify-between items-center mb-8 text-white">
           <div className="flex items-center gap-4">
